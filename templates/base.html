@@ -1,0 +1,293 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Puzzle House{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v=19">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="{% url 'store:product_list' %}" class="navbar__logo">Puzzle House</a>
+
+    <nav class="navbar__nav">
+      {% for cat in nav_categories %}
+        <a href="{{ cat.get_absolute_url }}"
+           class="navbar__nav-link {% if request.resolver_match.kwargs.slug == cat.slug %}navbar__nav-link--active{% endif %}">
+          {{ cat.name }}
+        </a>
+      {% endfor %}
+    </nav>
+
+    <div class="navbar__icons">
+      <a href="{% url 'store:favourites' %}" class="navbar__icon-btn" title="Избранное">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'accounts:profile' %}" class="navbar__icon-btn" title="Личный кабинет">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </a>
+      {% else %}
+      <button class="navbar__icon-btn" id="userBtn" title="Аккаунт">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+
+      <!-- Brand -->
+      <div class="footer__brand">
+        <div class="footer__brand-name">Puzzle House</div>
+        <p class="footer__brand-desc">Создаем качественные игровые решения, которые вдохновляют на любопытство и когнитивное развитие каждого ребёнка.</p>
+        <div class="footer__socials">
+          <a href="https://www.instagram.com/puzzle_house.tj" target="_blank" rel="noopener" class="footer__social-btn" title="Instagram">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect width="20" height="20" x="2" y="2" rx="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
+          <a href="#" class="footer__social-btn" title="Сайт">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </a>
+          <a href="mailto:hello@puzzlehouse.com" class="footer__social-btn" title="Email">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Nav columns -->
+      <div class="footer__nav-cols">
+        <div class="footer__col">
+          <div class="footer__col-title">Магазин</div>
+          <ul>
+            <li><a href="{% url 'store:product_list' %}">Пазлы</a></li>
+            <li><a href="{% url 'store:product_list' %}">Развивающие</a></li>
+            <li><a href="{% url 'store:product_list' %}">Настольные игры</a></li>
+            <li><a href="{% url 'store:product_list' %}">Новинки</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <div class="footer__col-title">Информация</div>
+          <ul>
+            <li><a href="#">О нас</a></li>
+            <li><a href="#" id="deliveryFooterBtn">Доставка</a></li>
+            <li><a href="#">Возврат</a></li>
+            <li><a href="#">Гид по безопасности</a></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+    <div class="footer__bottom">
+      &copy; 2025 Puzzle House. Все права защищены.
+    </div>
+  </div>
+</footer>
+
+<!-- ===== LOGOUT CONFIRM MODAL ===== -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Выйти из аккаунта?</h3>
+    <p style="color:var(--gray-600);font-size:14px;margin-bottom:28px;">Вы уверены, что хотите выйти?</p>
+    <div style="display:flex;gap:10px;">
+      <button id="logoutCancel" class="btn btn-outline" style="flex:1;justify-content:center;">Отмена</button>
+      <button id="logoutConfirm" class="btn btn-primary" style="flex:1;justify-content:center;">Выйти</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DELIVERY MODAL ===== -->
+<div class="modal-overlay" id="deliveryModal">
+  <div class="modal">
+    <button class="modal__close" id="deliveryClose">&times;</button>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="11" rx="1"/><circle cx="11.5" cy="19.5" r="1.5"/><circle cx="18.5" cy="19.5" r="1.5"/>
+      </svg>
+      Информация о доставке
+    </h3>
+
+    <div class="delivery-item">
+      <div class="delivery-icon">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="delivery-item__title">Зона доставки</div>
+        <div class="delivery-item__value">Доставка осуществляется по всему Таджикистану</div>
+      </div>
+    </div>
+
+    <div class="delivery-item">
+      <div class="delivery-icon">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <div>
+        <div class="delivery-item__title">Стоимость доставки</div>
+        <div class="delivery-item__value">По городу Душанбе — 10 сомон</div>
+      </div>
+    </div>
+
+    <div class="delivery-item">
+      <div class="delivery-icon green">🎁</div>
+      <div>
+        <div class="delivery-item__title">Специальная акция!</div>
+        <div class="delivery-item__value">При заказе от 3 товаров и более — доставка</div>
+        <span class="delivery-badge">БЕСПЛАТНО</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="deliveryModalClose" style="width:100%;justify-content:center;margin-top:20px;">Закрыть</button>
+  </div>
+</div>
+
+<!-- ===== AUTH MODAL ===== -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal__close" id="authClose">&times;</button>
+
+    {% if user.is_authenticated %}
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:12px;">Мой аккаунт</h3>
+      <p style="color:#666;font-size:14px;margin-bottom:24px;">Привет, {{ user.username }}!</p>
+      <a href="{% url 'accounts:profile' %}" class="btn btn-primary" style="display:flex;justify-content:center;margin-bottom:12px;">Личный кабинет</a>
+      <a href="{% url 'orders:history' %}" class="btn btn-outline" style="display:flex;justify-content:center;margin-bottom:12px;">Мои заказы</a>
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline" style="width:100%;justify-content:center;">Выйти</button>
+      </form>
+    {% else %}
+      <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden;">
+        <button class="auth-tab active" data-tab="registerPanel" style="flex:1;padding:10px;background:none;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;transition:background 0.2s;">Регистрация</button>
+        <button class="auth-tab" data-tab="loginPanel" style="flex:1;padding:10px;background:none;border:none;font-weight:500;font-size:14px;cursor:pointer;color:#666;font-family:inherit;transition:background 0.2s;">Войти</button>
+      </div>
+
+      <p class="modal__note">Зарегистрируйтесь или войдите, чтобы совершать покупки, отслеживать заказы и получать эксклюзивные предложения</p>
+
+      <!-- Register -->
+      <div id="registerPanel" class="auth-panel active">
+        <form method="post" action="{% url 'accounts:register' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <div class="form-group">
+            <label>Имя</label>
+            <div class="form-group__icon-wrap">
+              <span class="form-group__icon">👤</span>
+              <input type="text" name="username" placeholder="Введите ваше имя" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <div class="form-group__icon-wrap">
+              <span class="form-group__icon">✉️</span>
+              <input type="email" name="email" placeholder="example@mail.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Номер телефона</label>
+            <div class="phone-input-wrap">
+              <span class="phone-prefix">+992</span>
+              <input class="phone-digits-input" type="tel" name="phone"
+                     inputmode="numeric" maxlength="9" placeholder="XX XXX XXXX">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <div class="form-group__icon-wrap">
+              <span class="form-group__icon">🔒</span>
+              <input type="password" name="password1" placeholder="Введите пароль" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Повторите пароль</label>
+            <div class="form-group__icon-wrap">
+              <span class="form-group__icon">🔒</span>
+              <input type="password" name="password2" placeholder="Повторите пароль" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Зарегистрироваться</button>
+        </form>
+      </div>
+
+      <!-- Login -->
+      <div id="loginPanel" class="auth-panel" style="display:none;">
+        <form method="post" action="{% url 'accounts:login' %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <div class="form-group">
+            <label>Имя пользователя</label>
+            <div class="form-group__icon-wrap">
+              <span class="form-group__icon">👤</span>
+              <input type="text" name="username" placeholder="Введите имя пользователя" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <div class="form-group__icon-wrap">
+              <span class="form-group__icon">🔒</span>
+              <input type="password" name="password" placeholder="Введите пароль" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Войти</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script src="{% static 'js/main.js' %}?v=8"></script>
+<script>
+  // Footer delivery link
+  document.getElementById('deliveryFooterBtn').addEventListener('click', e => {
+    e.preventDefault(); openModal('deliveryModal');
+  });
+  // Auth tab style
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.auth-tab').forEach(t => {
+        t.style.background = 'none'; t.style.fontWeight = '500'; t.style.color = '#666';
+      });
+      tab.style.background = '#f2f2f2'; tab.style.fontWeight = '600'; tab.style.color = '#0d0d0d';
+      document.querySelectorAll('.auth-panel').forEach(p => p.style.display = 'none');
+      document.getElementById(tab.dataset.tab).style.display = 'block';
+    });
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

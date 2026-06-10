@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Избранное — Puzzle House{% endblock %}
+
+{% block content %}
+<div class="fav-page">
+  <div class="container">
+
+    <a href="{% url 'store:product_list' %}" class="fav-back">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Продолжить покупки
+    </a>
+
+    <h1 class="fav-title">
+      <svg width="28" height="28" fill="#e53e3e" stroke="#e53e3e" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      Избранное
+    </h1>
+
+    {% if items %}
+    <div class="fav-layout">
+
+      <!-- Left: items -->
+      <div class="fav-items" id="favItems">
+        {% for item in items %}
+        <div class="fav-item" id="fav-item-{{ item.pk }}"
+             data-fav-id="{{ item.pk }}"
+             data-price="{{ item.product.price }}">
+          <div class="fav-item__img">
+            {% if item.product.image %}
+              <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+            {% else %}
+              <span style="font-size:32px;">🧩</span>
+            {% endif %}
+          </div>
+          <div class="fav-item__info">
+            <div class="fav-item__name">{{ item.product.name }}</div>
+            <div class="fav-item__cat">{{ item.product.category.name }}</div>
+            <div class="fav-item__price">${{ item.product.price }}</div>
+            <div class="fav-item__qty">
+              <button class="fav-qty-btn" data-fav="{{ item.pk }}" data-action="dec">−</button>
+              <span class="fav-qty-val" id="qty-{{ item.pk }}">{{ item.quantity }}</span>
+              <button class="fav-qty-btn" data-fav="{{ item.pk }}" data-action="inc">+</button>
+            </div>
+          </div>
+          <button class="fav-item__del" data-fav="{{ item.pk }}" title="Удалить">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Right: summary -->
+      <div class="fav-summary" id="favSummary">
+        <div class="fav-summary__title">Сводка заказа</div>
+        <div class="fav-summary__row">
+          <span>Товаров (<span id="sumCount">{{ count }}</span>)</span>
+          <span id="sumSubtotal">${{ subtotal }}</span>
+        </div>
+        <div class="fav-summary__row">
+          <span>Доставка</span>
+          <span id="sumDelivery" class="{% if count >= delivery_threshold %}fav-delivery--free{% endif %}">
+            {% if count >= delivery_threshold %}Бесплатно{% else %}${{ delivery_cost }}.00{% endif %}
+          </span>
+        </div>
+        <div class="fav-summary__divider"></div>
+        <div class="fav-summary__total">
+          <span>Итого</span>
+          <span id="sumTotal">${{ grand_total }}</span>
+        </div>
+        <button class="btn btn-primary fav-summary__btn" id="openCheckoutBtn">Оформить заказ</button>
+        <p class="fav-summary__note">Нажимая "Оформить заказ", вы соглашаетесь с условиями продажи</p>
+      </div>
+
+    </div>
+
+    {% else %}
+    <div class="fav-empty">
+      <svg width="56" height="56" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <p>Вы ещё ничего не добавили в избранное</p>
+      <a href="{% url 'store:product_list' %}" class="btn btn-primary" style="margin-top:16px;">Перейти в магазин</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- ===== Confirm delete modal ===== -->
+<div class="fav-confirm-overlay" id="favConfirmOverlay">
+  <div class="fav-confirm">
+    <p class="fav-confirm__text">Удалить товар из избранного?</p>
+    <div class="fav-confirm__actions">
+      <button class="btn btn-outline" id="favConfirmCancel">Отмена</button>
+      <button class="btn" id="favConfirmOk" style="background:#e53e3e;color:#fff;">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Checkout modal ===== -->
+<div class="co-overlay" id="checkoutModal">
+  <div class="co-modal">
+
+    <div class="co-modal__header">
+      <h3 class="co-modal__title">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        Оформить заказ
+      </h3>
+      <button class="co-modal__close" id="checkoutModalClose">&times;</button>
+    </div>
+
+    <div class="co-modal__body">
+
+      <!-- Left: editable items -->
+      <div class="co-modal__items" id="coItems">
+        {% for item in items %}
+        <div class="co-item" id="co-item-{{ item.pk }}" data-price="{{ item.product.price }}">
+          <div class="co-item__img">
+            {% if item.product.image %}
+              <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+            {% else %}
+              <span style="font-size:24px;">🧩</span>
+            {% endif %}
+          </div>
+          <div class="co-item__info">
+            <div class="co-item__name">{{ item.product.name }}</div>
+            <div class="co-item__price" id="co-price-{{ item.pk }}">${{ item.get_total_price }}</div>
+          </div>
+          <div class="co-item__controls">
+            <button class="co-qty-btn" data-fav="{{ item.pk }}" data-action="dec">−</button>
+            <span class="co-qty-val" id="co-qty-{{ item.pk }}">{{ item.quantity }}</span>
+            <button class="co-qty-btn" data-fav="{{ item.pk }}" data-action="inc">+</button>
+            <button class="co-item__del" data-fav="{{ item.pk }}" title="Удалить">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Right: info + summary -->
+      <div class="co-modal__sidebar">
+
+        <!-- Contact & address -->
+        <div class="co-info-card">
+          <div class="co-info-card__title">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            Доставка
+          </div>
+
+          {% if user.profile.phone %}
+          <div class="co-info-row">
+            <span class="co-info-label">Телефон</span>
+            <span class="co-info-val">{{ user.profile.phone }}</span>
+          </div>
+          {% else %}
+          <div class="co-info-row co-info-row--warn">
+            <span>⚠ Телефон не указан</span>
+          </div>
+          {% endif %}
+
+          {% if user.profile.address %}
+          <div class="co-info-row">
+            <span class="co-info-label">Город</span>
+            <span class="co-info-val">{{ user.profile.city|default:"—" }}</span>
+          </div>
+          <div class="co-info-row">
+            <span class="co-info-label">Адрес</span>
+            <span class="co-info-val">{{ user.profile.address }}</span>
+          </div>
+          {% if user.profile.courier_comment %}
+          <div class="co-info-row">
+            <span class="co-info-label">Курьеру</span>
+            <span class="co-info-val">{{ user.profile.courier_comment }}</span>
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="co-info-row co-info-row--warn">
+            <span>⚠ Адрес не указан</span>
+          </div>
+          {% endif %}
+
+          <a href="{% url 'accounts:profile' %}" class="co-info-edit" target="_blank">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Изменить в профиле
+          </a>
+        </div>
+
+        <!-- Summary -->
+        <div class="co-summary">
+          <div class="co-summary__row">
+            <span>Товаров (<span id="coCount">{{ count }}</span>)</span>
+            <span id="coSubtotal">${{ subtotal }}</span>
+          </div>
+          <div class="co-summary__row">
+            <span>Доставка</span>
+            <span id="coDelivery" class="{% if count >= delivery_threshold %}fav-delivery--free{% endif %}">
+              {% if count >= delivery_threshold %}Бесплатно{% else %}${{ delivery_cost }}.00{% endif %}
+            </span>
+          </div>
+          <div class="co-summary__divider"></div>
+          <div class="co-summary__total">
+            <span>Итого</span>
+            <span id="coTotal">${{ grand_total }}</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary co-confirm-btn" id="confirmOrderBtn"
+          {% if not user.profile.address or not user.profile.phone %}disabled title="Укажите телефон и адрес в профиле"{% endif %}>
+          Подтвердить заказ
+        </button>
+
+        {% if not user.profile.address or not user.profile.phone %}
+        <p class="co-warn-note">Заполните телефон и адрес в <a href="{% url 'accounts:profile' %}" target="_blank">профиле</a>, чтобы оформить заказ</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  function getCookie(name) {
+    var v = '; ' + document.cookie, p = v.split('; ' + name + '=');
+    if (p.length === 2) return p.pop().split(';').shift();
+  }
+  function post(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: new URLSearchParams(data)
+    });
+  }
+
+  var DELIVERY_COST = {{ delivery_cost }};
+  var DELIVERY_THRESHOLD = {{ delivery_threshold }};
+
+  /* ---- shared recalc: updates both main page and modal summaries ---- */
+  function recalcAll() {
+    var items = document.querySelectorAll('.fav-item');
+    var count = 0, subtotal = 0;
+    items.forEach(function(row) {
+      var favId = row.dataset.favId;
+      var qty = parseInt(document.getElementById('qty-' + favId).textContent);
+      var price = parseFloat(row.dataset.price);
+      count += qty;
+      subtotal += qty * price;
+    });
+    var delivery = count >= DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
+    var grand = subtotal + delivery;
+
+    // main summary
+    setEl('sumCount', count);
+    setEl('sumSubtotal', '$' + subtotal.toFixed(2));
+    setEl('sumTotal', '$' + grand.toFixed(2));
+    setDelivery('sumDelivery', delivery);
+
+    // checkout modal summary
+    setEl('coCount', count);
+    setEl('coSubtotal', '$' + subtotal.toFixed(2));
+    setEl('coTotal', '$' + grand.toFixed(2));
+    setDelivery('coDelivery', delivery);
+  }
+
+  function setEl(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function setDelivery(id, delivery) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (delivery === 0) {
+      el.textContent = 'Бесплатно';
+      el.classList.add('fav-delivery--free');
+    } else {
+      el.textContent = '$' + DELIVERY_COST.toFixed(2);
+      el.classList.remove('fav-delivery--free');
+    }
+  }
+
+  function updateDecBtns(favId, qty) {
+    document.querySelectorAll('[data-fav="' + favId + '"][data-action="dec"]').forEach(function(b) {
+      b.disabled = qty <= 1;
+    });
+  }
+
+  /* ---- init dec buttons ---- */
+  document.querySelectorAll('.fav-qty-val').forEach(function(el) {
+    updateDecBtns(el.id.replace('qty-', ''), parseInt(el.textContent));
+  });
+
+  /* ---- qty buttons (both main page and modal) ---- */
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.fav-qty-btn, .co-qty-btn');
+    if (!btn) return;
+    var favId = btn.dataset.fav;
+    var action = btn.dataset.action;
+    post('/favourites/' + favId + '/qty/', { action: action })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        // update all qty displays for this fav
+        document.querySelectorAll('#qty-' + favId + ', #co-qty-' + favId).forEach(function(el) {
+          el.textContent = data.quantity;
+        });
+        // update per-item total in modal
+        var coItem = document.getElementById('co-item-' + favId);
+        if (coItem) {
+          var price = parseFloat(coItem.dataset.price);
+          var priceEl = document.getElementById('co-price-' + favId);
+          if (priceEl) priceEl.textContent = '$' + (price * data.quantity).toFixed(2);
+        }
+        updateDecBtns(favId, data.quantity);
+        recalcAll();
+      });
+  });
+
+  /* ---- delete from main page (with confirm) ---- */
+  var pendingFavId = null;
+  var confirmOverlay = document.getElementById('favConfirmOverlay');
+
+  document.querySelectorAll('.fav-item__del').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      pendingFavId = btn.dataset.fav;
+      confirmOverlay.classList.add('open');
+    });
+  });
+
+  document.getElementById('favConfirmCancel').addEventListener('click', function() {
+    confirmOverlay.classList.remove('open'); pendingFavId = null;
+  });
+  confirmOverlay.addEventListener('click', function(e) {
+    if (e.target === confirmOverlay) { confirmOverlay.classList.remove('open'); pendingFavId = null; }
+  });
+
+  document.getElementById('favConfirmOk').addEventListener('click', function() {
+    if (!pendingFavId) return;
+    doRemove(pendingFavId);
+    confirmOverlay.classList.remove('open');
+    pendingFavId = null;
+  });
+
+  /* ---- delete from modal (no confirm) ---- */
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.co-item__del');
+    if (!btn) return;
+    doRemove(btn.dataset.fav);
+  });
+
+  function doRemove(favId) {
+    post('/favourites/' + favId + '/remove/', {}).then(function() {
+      ['fav-item-' + favId, 'co-item-' + favId].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.style.transition = 'opacity 0.2s';
+        el.style.opacity = '0';
+        setTimeout(function() { el.remove(); recalcAll(); }, 200);
+      });
+      setTimeout(function() {
+        if (!document.querySelector('.fav-item')) location.reload();
+      }, 300);
+    });
+  }
+
+  /* ---- checkout modal open/close ---- */
+  var checkoutModal = document.getElementById('checkoutModal');
+
+  document.getElementById('openCheckoutBtn').addEventListener('click', function() {
+    checkoutModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  function closeCheckout() {
+    checkoutModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('checkoutModalClose').addEventListener('click', closeCheckout);
+  checkoutModal.addEventListener('click', function(e) {
+    if (e.target === checkoutModal) closeCheckout();
+  });
+
+  /* ---- confirm order ---- */
+  document.getElementById('confirmOrderBtn').addEventListener('click', function() {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Оформляем...';
+    post('/favourites/checkout/', {})
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.status === 'ok') {
+          window.location.href = '/accounts/profile/?order_placed=1';
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Подтвердить заказ';
+          alert('Ошибка. Попробуйте ещё раз.');
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить заказ';
+      });
+  });
+
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} — Puzzle House{% endblock %}
+
+{% block content %}
+
+<div class="pd-page">
+  <div class="container">
+
+    <!-- Breadcrumb -->
+    <nav class="pd-breadcrumb">
+      <a href="{% url 'store:product_list' %}">Все товары</a>
+      <span class="pd-breadcrumb__sep">›</span>
+      <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+      <span class="pd-breadcrumb__sep">›</span>
+      <span>{{ product.name }}</span>
+    </nav>
+
+    <!-- Main layout -->
+    <div class="pd-layout">
+
+      <!-- Gallery -->
+      {% with all_images=product.images.all %}
+      <div class="pd-gallery">
+        <div class="pd-gallery__main" id="pdGalleryMain">
+          {% if all_images %}
+            <img id="pdMainImg" src="{{ all_images.0.image.url }}" alt="{{ product.name }}">
+          {% elif product.image %}
+            <img id="pdMainImg" src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <div class="pd-gallery__placeholder">🧩</div>
+          {% endif %}
+          {% if all_images.count > 1 %}
+          <button class="pd-gallery__nav pd-gallery__nav--prev" id="pdPrev" aria-label="Назад">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <button class="pd-gallery__nav pd-gallery__nav--next" id="pdNext" aria-label="Вперёд">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+          {% endif %}
+        </div>
+        {% if all_images.count > 1 %}
+        <div class="pd-gallery__thumbs" id="pdThumbs">
+          {% for img in all_images %}
+          <div class="pd-gallery__thumb {% if forloop.first %}active{% endif %}"
+               data-src="{{ img.image.url }}" data-index="{{ forloop.counter0 }}">
+            <img src="{{ img.image.url }}" alt="{{ product.name }} фото {{ forloop.counter }}">
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endwith %}
+
+      <!-- Info -->
+      <div class="pd-info">
+
+        <!-- Name -->
+        <h1 class="pd-name">{{ product.name }}</h1>
+
+        <!-- Price row -->
+        <div class="pd-price-row">
+          <span class="pd-price">${{ product.price }}</span>
+          {% if product.stock > 0 %}
+            <span class="pd-stock pd-stock--in">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              {{ product.stock }} шт. в наличии
+            </span>
+          {% else %}
+            <span class="pd-stock pd-stock--out">Нет в наличии</span>
+          {% endif %}
+        </div>
+
+        <!-- Description -->
+        {% if product.description %}
+        <p class="pd-desc-text">{{ product.description }}</p>
+        {% endif %}
+
+        <div class="pd-divider"></div>
+
+        <!-- Specs grid -->
+        <div class="pd-specs">
+          <div class="pd-spec">
+            <div class="pd-spec__label">Категория</div>
+            <div class="pd-spec__value">{{ product.category.name }}</div>
+          </div>
+          <div class="pd-spec">
+            <div class="pd-spec__label">Наличие</div>
+            <div class="pd-spec__value">{% if product.stock > 0 %}В наличии{% else %}Нет в наличии{% endif %}</div>
+          </div>
+          {% if product.pieces %}
+          <div class="pd-spec">
+            <div class="pd-spec__label">Элементов</div>
+            <div class="pd-spec__value">{{ product.pieces }} шт.</div>
+          </div>
+          {% endif %}
+          {% if product.size %}
+          <div class="pd-spec">
+            <div class="pd-spec__label">Размер</div>
+            <div class="pd-spec__value">{{ product.size }}</div>
+          </div>
+          {% endif %}
+          {% if product.material %}
+          <div class="pd-spec">
+            <div class="pd-spec__label">Материал</div>
+            <div class="pd-spec__value">{{ product.material }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="pd-divider"></div>
+
+        <!-- Actions -->
+        <div class="pd-actions">
+          {% if user.is_authenticated %}
+            <button class="pd-buy-btn js-quick-buy btn btn-primary btn-pill"
+                    data-id="{{ product.pk }}"
+                    data-name="{{ product.name }}"
+                    data-price="{{ product.price }}"
+                    data-image="{% if product.image %}{{ product.image.url }}{% endif %}">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              Купить сейчас
+            </button>
+          {% else %}
+            <button class="pd-buy-btn btn btn-primary btn-pill" onclick="openModal('authModal')">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              Купить сейчас
+            </button>
+          {% endif %}
+
+          <button class="pd-fav-btn {% if product.pk in fav_ids %}active{% endif %}"
+                  data-product-id="{{ product.pk }}" title="В избранное">
+            <svg width="20" height="20" fill="{% if product.pk in fav_ids %}currentColor{% else %}none{% endif %}"
+                 stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="pd-divider"></div>
+
+        <!-- Features -->
+        <div class="pd-features">
+          <div class="pd-feature">
+            <div class="pd-feature__icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+            <div class="pd-feature__text">
+              <div class="pd-feature__title">Премиальное качество</div>
+              <div class="pd-feature__sub">Экологичные материалы</div>
+            </div>
+          </div>
+          <div class="pd-feature">
+            <div class="pd-feature__icon">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="11" rx="1"/><circle cx="11.5" cy="19.5" r="1.5"/><circle cx="18.5" cy="19.5" r="1.5"/>
+              </svg>
+            </div>
+            <div class="pd-feature__text">
+              <div class="pd-feature__title">Бесплатная доставка</div>
+              <div class="pd-feature__sub">При заказе от {{ delivery_threshold }} товаров</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% if user.is_authenticated %}
+<!-- Quick Checkout Modal -->
+<div class="co-overlay" id="quickCheckoutModal">
+  <div class="co-modal" style="max-width:700px;">
+    <div class="co-modal__header">
+      <h3 class="co-modal__title">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        Оформить заказ
+      </h3>
+      <button class="co-modal__close" id="quickModalClose">&times;</button>
+    </div>
+    <div class="co-modal__body">
+      <div class="co-modal__items">
+        <div class="co-item">
+          <div class="co-item__img" id="qcImg"></div>
+          <div class="co-item__info">
+            <div class="co-item__name" id="qcName"></div>
+            <div class="co-item__price" id="qcItemPrice"></div>
+          </div>
+          <div class="co-item__controls">
+            <button class="co-qty-btn" id="qcDec">−</button>
+            <span class="co-qty-val" id="qcQty">1</span>
+            <button class="co-qty-btn" id="qcInc">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="co-modal__sidebar">
+        <div class="co-info-card">
+          <div class="co-info-card__title">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            Доставка
+          </div>
+          {% if user.profile.phone %}
+          <div class="co-info-row">
+            <span class="co-info-label">Телефон</span>
+            <span class="co-info-val">{{ user.profile.phone }}</span>
+          </div>
+          {% else %}
+          <div class="co-info-row co-info-row--warn"><span>⚠ Телефон не указан</span></div>
+          {% endif %}
+          {% if user.profile.address %}
+          <div class="co-info-row">
+            <span class="co-info-label">Город</span>
+            <span class="co-info-val">{{ user.profile.city|default:"—" }}</span>
+          </div>
+          <div class="co-info-row">
+            <span class="co-info-label">Адрес</span>
+            <span class="co-info-val">{{ user.profile.address }}</span>
+          </div>
+          {% else %}
+          <div class="co-info-row co-info-row--warn"><span>⚠ Адрес не указан</span></div>
+          {% endif %}
+          <a href="{% url 'accounts:profile' %}" class="co-info-edit" target="_blank">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Изменить в профиле
+          </a>
+        </div>
+        <div class="co-summary">
+          <div class="co-summary__row">
+            <span>Товаров (<span id="qcCount">1</span>)</span>
+            <span id="qcSubtotal">$0.00</span>
+          </div>
+          <div class="co-summary__row">
+            <span>Доставка</span>
+            <span id="qcDelivery"></span>
+          </div>
+          <div class="co-summary__divider"></div>
+          <div class="co-summary__total">
+            <span>Итого</span>
+            <span id="qcTotal">$0.00</span>
+          </div>
+        </div>
+        <button class="btn btn-primary co-confirm-btn" id="qcConfirmBtn"
+          {% if not user.profile.address or not user.profile.phone %}disabled title="Укажите телефон и адрес в профиле"{% endif %}>
+          Подтвердить заказ
+        </button>
+        {% if not user.profile.address or not user.profile.phone %}
+        <p class="co-warn-note">Заполните телефон и адрес в <a href="{% url 'accounts:profile' %}" target="_blank">профиле</a>, чтобы оформить заказ</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if user.is_authenticated %}
+<script>
+(function() {
+  var DELIVERY_COST = {{ delivery_cost }};
+  var DELIVERY_THRESHOLD = {{ delivery_threshold }};
+  var modal = document.getElementById('quickCheckoutModal');
+  if (!modal) return;
+
+  var currentProductId = null;
+  var currentPrice = 0;
+
+  function getCookie(name) {
+    var v = '; ' + document.cookie, p = v.split('; ' + name + '=');
+    if (p.length === 2) return p.pop().split(';').shift();
+  }
+
+  function recalc() {
+    var qty = parseInt(document.getElementById('qcQty').textContent);
+    var subtotal = currentPrice * qty;
+    var delivery = qty >= DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
+    var total = subtotal + delivery;
+    document.getElementById('qcCount').textContent = qty;
+    document.getElementById('qcSubtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('qcItemPrice').textContent = '$' + subtotal.toFixed(2);
+    var deliveryEl = document.getElementById('qcDelivery');
+    if (delivery === 0) {
+      deliveryEl.textContent = 'Бесплатно';
+      deliveryEl.classList.add('fav-delivery--free');
+    } else {
+      deliveryEl.textContent = '$' + delivery.toFixed(2);
+      deliveryEl.classList.remove('fav-delivery--free');
+    }
+    document.getElementById('qcTotal').textContent = '$' + total.toFixed(2);
+    document.getElementById('qcDec').disabled = qty <= 1;
+  }
+
+  document.querySelectorAll('.js-quick-buy').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentProductId = btn.dataset.id;
+      currentPrice = parseFloat(btn.dataset.price);
+      var name = btn.dataset.name;
+      var image = btn.dataset.image;
+      document.getElementById('qcQty').textContent = '1';
+      document.getElementById('qcName').textContent = name;
+      var imgEl = document.getElementById('qcImg');
+      imgEl.innerHTML = image
+        ? '<img src="' + image + '" alt="' + name + '">'
+        : '<span style="font-size:24px;">🧩</span>';
+      recalc();
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  document.getElementById('qcInc').addEventListener('click', function() {
+    var el = document.getElementById('qcQty');
+    el.textContent = parseInt(el.textContent) + 1;
+    recalc();
+  });
+  document.getElementById('qcDec').addEventListener('click', function() {
+    var el = document.getElementById('qcQty');
+    var qty = parseInt(el.textContent);
+    if (qty > 1) { el.textContent = qty - 1; recalc(); }
+  });
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('quickModalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+  document.getElementById('qcConfirmBtn').addEventListener('click', function() {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Оформляем...';
+    fetch('{% url "store:quick_checkout" %}', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: new URLSearchParams({
+        product_id: currentProductId,
+        quantity: document.getElementById('qcQty').textContent
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        window.location.href = '/accounts/profile/?order_placed=1';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить заказ';
+        alert('Ошибка. Попробуйте ещё раз.');
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = 'Подтвердить заказ';
+    });
+  });
+
+  // Gallery
+  (function() {
+    var thumbs = document.querySelectorAll('.pd-gallery__thumb');
+    var mainImg = document.getElementById('pdMainImg');
+    var prev = document.getElementById('pdPrev');
+    var next = document.getElementById('pdNext');
+    if (!mainImg || thumbs.length < 2) return;
+
+    var current = 0;
+
+    function goTo(idx) {
+      thumbs[current].classList.remove('active');
+      current = (idx + thumbs.length) % thumbs.length;
+      thumbs[current].classList.add('active');
+      mainImg.src = thumbs[current].dataset.src;
+      thumbs[current].scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+    }
+
+    thumbs.forEach(function(t) {
+      t.addEventListener('click', function() { goTo(parseInt(t.dataset.index)); });
+    });
+    if (prev) prev.addEventListener('click', function() { goTo(current - 1); });
+    if (next) next.addEventListener('click', function() { goTo(current + 1); });
+  })();
+
+  // Favourite toggle on detail page
+  var favBtn = document.querySelector('.pd-fav-btn[data-product-id]');
+  if (favBtn) {
+    favBtn.addEventListener('click', function() {
+      var id = favBtn.getAttribute('data-product-id');
+      fetch('/favourite/toggle/' + id + '/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }
+      }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        var svg = favBtn.querySelector('svg');
+        if (data.status === 'added') {
+          favBtn.classList.add('active');
+          svg.setAttribute('fill', 'currentColor');
+          showToast('Товар добавлен в избранное ❤️');
+        } else {
+          favBtn.classList.remove('active');
+          svg.setAttribute('fill', 'none');
+          showToast('Товар удалён из избранного', 'info');
+        }
+      });
+    });
+  }
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение email — Puzzle House{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:56px;height:56px;background:var(--yellow-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <h1 class="auth-card__title" style="margin-bottom:8px;">Проверьте email</h1>
+      <p class="auth-card__subtitle">
+        Мы отправили 6-значный код на<br>
+        <strong>{{ email }}</strong>
+      </p>
+    </div>
+
+    {% if resent %}
+    <p style="color:#16a34a;text-align:center;font-size:14px;margin-bottom:16px;">✓ Новый код отправлен</p>
+    {% endif %}
+
+    {% if expired %}
+    <p class="form-field-error" style="text-align:center;">{{ error }}</p>
+    <div style="text-align:center;margin-top:16px;">
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-pill" style="display:inline-block;padding:12px 32px;">Зарегистрироваться заново</a>
+    </div>
+    {% else %}
+
+    <form method="post" autocomplete="off">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="verify">
+
+      <div class="form-group">
+        <label for="id_code" style="text-align:center;display:block;">Код подтверждения</label>
+        <input type="text" name="code" id="id_code"
+               maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
+               placeholder="000000"
+               style="text-align:center;font-size:28px;font-weight:700;letter-spacing:10px;padding:14px;"
+               class="no-icon" autofocus>
+        {% if error %}
+        <p class="form-field-error" style="text-align:center;">{{ error }}</p>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">
+        Подтвердить
+      </button>
+    </form>
+
+    <form method="post" style="margin-top:16px;text-align:center;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="resend">
+      <button type="submit" style="background:none;border:none;color:var(--gray-600);font-size:14px;cursor:pointer;text-decoration:underline;">
+        Отправить код повторно
+      </button>
+    </form>
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var input = document.getElementById('id_code');
+  if (!input) return;
+  input.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    if (this.value.length === 6) {
+      this.closest('form').submit();
+    }
+  });
+})();
+</script>
+{% endblock %}

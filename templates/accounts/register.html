@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация — Puzzle House{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <h1 class="auth-card__title">Создать аккаунт</h1>
+    <p class="auth-card__subtitle">Заполните данные для регистрации</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="id_username">Имя пользователя</label>
+        <input type="text" name="username" id="id_username"
+               value="{{ form.username.value|default:'' }}"
+               placeholder="username" class="no-icon" autocomplete="username">
+        {% for error in form.username.errors %}
+          <p class="form-field-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_email">Email</label>
+        <input type="email" name="email" id="id_email"
+               value="{{ form.email.value|default:'' }}"
+               placeholder="you@example.com" class="no-icon" autocomplete="email">
+        <p class="form-field-error" id="emailError" style="display:none;"></p>
+        <p class="form-field-ok" id="emailOk" style="display:none;">✓ Email подходит</p>
+        {% for error in form.email.errors %}
+          <p class="form-field-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_phone">Номер телефона</label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">+992</span>
+          <input class="phone-digits-input" type="tel" name="phone" id="id_phone"
+                 inputmode="numeric" maxlength="9" placeholder="XX XXX XXXX"
+                 value="{{ form.phone.value|default:''|slice:'4:' }}" autocomplete="tel">
+        </div>
+        {% for error in form.phone.errors %}
+          <p class="form-field-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_password1">Пароль</label>
+        <input type="password" name="password1" id="id_password1"
+               placeholder="Минимум 8 символов" class="no-icon" autocomplete="new-password">
+        {% for error in form.password1.errors %}
+          <p class="form-field-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label for="id_password2">Подтвердите пароль</label>
+        <input type="password" name="password2" id="id_password2"
+               placeholder="Повторите пароль" class="no-icon" autocomplete="new-password">
+        {% for error in form.password2.errors %}
+          <p class="form-field-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <p class="form-field-error">{{ form.non_field_errors }}</p>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">
+        Зарегистрироваться
+      </button>
+    </form>
+
+    <p class="auth-link">
+      Уже есть аккаунт? <a href="{% url 'accounts:login' %}">Войти</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var emailInput = document.getElementById('id_email');
+  var errorEl = document.getElementById('emailError');
+  var okEl = document.getElementById('emailOk');
+  var timer = null;
+
+  function checkEmail(val) {
+    errorEl.style.display = 'none';
+    okEl.style.display = 'none';
+    if (!val || val.indexOf('@') === -1) return;
+
+    fetch('{% url "accounts:check_email" %}?email=' + encodeURIComponent(val))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.valid) {
+          okEl.style.display = 'block';
+        } else {
+          errorEl.textContent = data.message;
+          errorEl.style.display = 'block';
+        }
+      });
+  }
+
+  emailInput.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(function() { checkEmail(emailInput.value.trim()); }, 600);
+  });
+
+  emailInput.addEventListener('blur', function() {
+    clearTimeout(timer);
+    checkEmail(emailInput.value.trim());
+  });
+})();
+</script>
+{% endblock %}

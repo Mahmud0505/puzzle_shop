@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Личный кабинет — Puzzle House{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+  <div class="container">
+
+    <a href="{% url 'store:product_list' %}" class="fav-back">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Вернуться на главную
+    </a>
+
+    <div class="profile-layout">
+
+      <!-- Left column -->
+      <div class="profile-left">
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <svg width="48" height="48" fill="white" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </div>
+          <div class="profile-name">{{ user.username }}</div>
+          <div class="profile-role">Покупатель</div>
+
+          <div class="profile-contacts">
+            {% if user.email %}
+            <div class="profile-contact-item">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              {{ user.email }}
+            </div>
+            {% endif %}
+            {% if user.profile.phone %}
+            <div class="profile-contact-item">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
+              </svg>
+              {{ user.profile.phone }}
+            </div>
+            {% else %}
+            <div class="profile-contact-item profile-contact-item--muted">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.06 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
+              </svg>
+              Телефон не указан
+            </div>
+            {% endif %}
+          </div>
+
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="profile-logout-btn">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Выйти
+            </button>
+          </form>
+        </div>
+
+        <div class="profile-settings-card">
+          <div class="profile-settings-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Настройки
+          </div>
+          <a href="#" class="profile-settings-link" id="openEditProfileModal">Изменить</a>
+          <a href="#" class="profile-settings-link" id="openAddressModal">Адреса доставки</a>
+          <a href="{% url 'store:favourites' %}" class="profile-settings-link">Избранное</a>
+        </div>
+
+        <!-- Address card -->
+        <div class="profile-address-card">
+          <div class="profile-address-header">
+            <div class="profile-address-title">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              Адрес доставки
+            </div>
+            <button class="profile-address-edit-btn" id="openAddressModalBtn">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Изменить
+            </button>
+          </div>
+
+          {% if user.profile.address %}
+            <div class="profile-address-display">
+              {% if user.profile.city %}
+              <div class="profile-address-line">
+                <span class="profile-address-label">Город:</span>
+                <span>{{ user.profile.city }}</span>
+              </div>
+              {% endif %}
+              <div class="profile-address-line">
+                <span class="profile-address-label">Адрес:</span>
+                <span>{{ user.profile.address }}</span>
+              </div>
+              {% if user.profile.courier_comment %}
+              <div class="profile-address-line">
+                <span class="profile-address-label">Курьеру:</span>
+                <span>{{ user.profile.courier_comment }}</span>
+              </div>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="profile-address-empty">
+              <svg width="32" height="32" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <p>Адрес доставки не указан</p>
+              <button class="btn btn-primary" id="openAddressModalBtn2" style="margin-top:12px;font-size:13px;padding:8px 18px;">
+                Добавить адрес
+              </button>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="profile-right">
+
+        <!-- Stats -->
+        <div class="profile-stats">
+          <div class="profile-stat-card profile-stat-card--total profile-stat-card--active" data-filter="all" onclick="filterOrders('all')">
+            <div class="profile-stat-num">{{ total_orders }}</div>
+            <div class="profile-stat-label">Всего заказов</div>
+          </div>
+          <div class="profile-stat-card profile-stat-card--pending" data-filter="pending" onclick="filterOrders('pending')">
+            <div class="profile-stat-num">{{ pending_orders }}</div>
+            <div class="profile-stat-label">В обработке</div>
+          </div>
+          <div class="profile-stat-card profile-stat-card--shipped" data-filter="shipped" onclick="filterOrders('shipped')">
+            <div class="profile-stat-num">{{ shipped_orders }}</div>
+            <div class="profile-stat-label">В пути</div>
+          </div>
+          <div class="profile-stat-card profile-stat-card--delivered" data-filter="delivered" onclick="filterOrders('delivered')">
+            <div class="profile-stat-num">{{ delivered_orders }}</div>
+            <div class="profile-stat-label">Доставлено</div>
+          </div>
+          <div class="profile-stat-card profile-stat-card--cancelled" data-filter="cancelled" onclick="filterOrders('cancelled')">
+            <div class="profile-stat-num">{{ cancelled_orders }}</div>
+            <div class="profile-stat-label">Отменено</div>
+          </div>
+        </div>
+
+        <!-- Order history -->
+        <div class="profile-orders-card">
+          <div class="profile-orders-title" style="justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:8px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="11" rx="1"/><circle cx="11.5" cy="19.5" r="1.5"/><circle cx="18.5" cy="19.5" r="1.5"/>
+              </svg>
+              История заказов
+            </span>
+            <span id="ordersFilterLabel" style="font-size:13px;font-weight:500;color:#6b7280;"></span>
+          </div>
+
+          {% if orders %}
+            <div id="ordersEmptyFilter" style="display:none;text-align:center;padding:32px 0;color:#9ca3af;font-size:14px;">Заказов с таким статусом нет</div>
+            {% for order in orders %}
+            <div class="profile-order-item" data-status="{{ order.status }}">
+              <div class="profile-order-left">
+                <div class="profile-order-header">
+                  <div class="profile-order-thumbs">
+                    {% for item in order.items.all|slice:":3" %}
+                      <a href="{{ item.product.get_absolute_url }}" class="profile-order-thumb-link" title="{{ item.product.name }}">
+                        {% if item.product.image %}
+                          <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="profile-order-thumb">
+                        {% else %}
+                          <div class="profile-order-thumb profile-order-thumb--empty">🧩</div>
+                        {% endif %}
+                      </a>
+                    {% endfor %}
+                    {% if order.items.count > 3 %}
+                      <div class="profile-order-thumb profile-order-thumb--more">+{{ order.items.count|add:"-3" }}</div>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="profile-order-id">Заказ #{{ order.pk }}</div>
+                    <div class="profile-order-date">{{ order.created|date:"j E Y" }}</div>
+                  </div>
+                </div>
+                <div class="profile-order-count">{{ order.items.count }} товар{{ order.items.count|pluralize:"а,ов" }}</div>
+              </div>
+              <div class="profile-order-right">
+                <div class="profile-order-price">${{ order.total_price }}</div>
+                <span class="profile-order-badge profile-order-badge--{{ order.status }}">
+                  {{ order.get_status_display }}
+                </span>
+                <a href="{% url 'orders:detail' pk=order.pk %}" class="profile-order-detail">Посмотреть детали</a>
+                {% if order.status == 'pending' or order.status == 'processing' %}
+                <form id="cancel-form-{{ order.pk }}" method="post" action="{% url 'orders:cancel' pk=order.pk %}" style="margin-top:6px;">
+                  {% csrf_token %}
+                  <button type="button" onclick="openCancelModal({{ order.pk }})" style="background:none;border:none;color:#dc2626;font-size:12px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    Отменить
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="profile-orders-empty">
+              <svg width="40" height="40" fill="none" stroke="#ccc" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect width="13" height="8" x="9" y="11" rx="1"/>
+              </svg>
+              <p>У вас пока нет заказов</p>
+              <a href="{% url 'store:product_list' %}" class="btn btn-primary" style="margin-top:12px;">Перейти в магазин</a>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit profile modal -->
+<div class="modal-overlay" id="editProfileModal" data-open="{% if profile_errors %}1{% else %}0{% endif %}">
+  <div class="modal">
+    <button class="modal__close" id="editProfileModalClose">&times;</button>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      Редактировать профиль
+    </h3>
+
+    <form method="post" action="{% url 'accounts:profile' %}">
+      {% csrf_token %}
+      <input type="hidden" name="save_profile" value="1">
+
+      <div class="form-group">
+        <label>Имя пользователя</label>
+        <div class="form-group__icon-wrap">
+          <span class="form-group__icon">👤</span>
+          <input type="text" name="username" value="{{ user.username }}" placeholder="Ваше имя" required>
+        </div>
+        {% if profile_errors.username %}
+        <div style="color:#dc2626;font-size:12px;margin-top:4px;">{{ profile_errors.username }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label>Номер телефона</label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">+992</span>
+          <input class="phone-digits-input" type="tel" name="phone" inputmode="numeric"
+                 maxlength="9" placeholder="XX XXX XXXX"
+                 value="{% if user.profile.phone %}{{ user.profile.phone|slice:'4:' }}{% endif %}">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">
+        Сохранить изменения
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Cancel order modal -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal" style="max-width:400px;text-align:center;">
+    <div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="28" height="28" fill="none" stroke="#dc2626" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+    </div>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Отменить заказ?</h3>
+    <p id="cancelModalText" style="color:#6b7280;font-size:14px;margin-bottom:24px;">Это действие нельзя отменить.</p>
+    <div style="display:flex;gap:12px;">
+      <button onclick="closeCancelModal()" style="flex:1;padding:11px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;color:#374151;">
+        Нет, оставить
+      </button>
+      <button id="cancelConfirmBtn" style="flex:1;padding:11px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">
+        Да, отменить
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Address modal -->
+<div class="modal-overlay" id="addressModal">
+  <div class="modal">
+    <button class="modal__close" id="addressModalClose">&times;</button>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      Адрес доставки
+    </h3>
+
+    <form method="post" action="{% url 'accounts:profile' %}">
+      {% csrf_token %}
+      <input type="hidden" name="save_address" value="1">
+
+      <div class="form-group">
+        <label>Номер телефона</label>
+        <div class="phone-input-wrap">
+          <span class="phone-prefix">+992</span>
+          <input class="phone-digits-input" type="tel" name="phone" inputmode="numeric"
+                 maxlength="9" placeholder="XX XXX XXXX"
+                 value="{% if user.profile.phone %}{{ user.profile.phone|slice:'4:' }}{% endif %}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Город</label>
+        <div class="form-group__icon-wrap">
+          <span class="form-group__icon">🏙️</span>
+          <input type="text" name="city" value="{{ user.profile.city }}" placeholder="Душанбе">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Адрес доставки</label>
+        <div class="form-group__icon-wrap">
+          <span class="form-group__icon">📍</span>
+          <input type="text" name="address" value="{{ user.profile.address }}" placeholder="ул. Рудаки 10, кв. 5" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>
+          Комментарий для курьера
+          <span style="color:var(--gray-400);font-weight:400;font-size:12px;margin-left:4px;">(необязательно)</span>
+        </label>
+        <div class="form-group__icon-wrap">
+          <span class="form-group__icon">💬</span>
+          <input type="text" name="courier_comment" value="{{ user.profile.courier_comment }}" placeholder="Код домофона, этаж, ориентир...">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">
+        Сохранить
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+.profile-stat-card {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.profile-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+}
+.profile-stat-card--active {
+  box-shadow: 0 0 0 2.5px currentColor, 0 4px 16px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
+}
+.profile-order-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.profile-order-thumbs {
+  display: flex;
+  flex-direction: row;
+}
+.profile-order-thumbs .profile-order-thumb-link + .profile-order-thumb-link {
+  margin-left: -8px;
+}
+.profile-order-thumb-link {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 8px;
+  transition: transform 0.15s, z-index 0s;
+  position: relative;
+  z-index: 1;
+}
+.profile-order-thumb-link:hover {
+  transform: scale(1.12);
+  z-index: 5;
+}
+.profile-order-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid #fff;
+  object-fit: cover;
+  background: #f3f4f6;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.profile-order-thumb--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.profile-order-thumb--more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+}
+</style>
+
+<script>
+function filterOrders(status) {
+  var items = document.querySelectorAll('.profile-order-item');
+  var cards = document.querySelectorAll('.profile-stat-card[data-filter]');
+  var label = document.getElementById('ordersFilterLabel');
+  var emptyMsg = document.getElementById('ordersEmptyFilter');
+  var visibleCount = 0;
+
+  cards.forEach(function(c) { c.classList.remove('profile-stat-card--active'); });
+  var activeCard = document.querySelector('.profile-stat-card[data-filter="' + status + '"]');
+  if (activeCard) activeCard.classList.add('profile-stat-card--active');
+
+  var labelMap = {
+    'all': '', 'pending': 'В обработке', 'processing': 'В обработке',
+    'shipped': 'В пути', 'delivered': 'Доставлено', 'cancelled': 'Отменено'
+  };
+  label.textContent = labelMap[status] ? '— ' + labelMap[status] : '';
+
+  items.forEach(function(item) {
+    var s = item.getAttribute('data-status');
+    var show = status === 'all' || s === status || (status === 'pending' && (s === 'pending' || s === 'processing'));
+    item.style.display = show ? '' : 'none';
+    if (show) visibleCount++;
+  });
+
+  emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+(function() {
+  function openEdit() {
+    document.getElementById('editProfileModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeEdit() {
+    document.getElementById('editProfileModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  var openBtn = document.getElementById('openEditProfileModal');
+  var closeBtn = document.getElementById('editProfileModalClose');
+  var overlay = document.getElementById('editProfileModal');
+  if (openBtn) openBtn.addEventListener('click', function(e) { e.preventDefault(); openEdit(); });
+  if (closeBtn) closeBtn.addEventListener('click', closeEdit);
+  if (overlay) overlay.addEventListener('click', function(e) { if (e.target === overlay) closeEdit(); });
+  if (overlay && overlay.dataset.open === '1') openEdit();
+})();
+
+function openCancelModal(orderId) {
+  document.getElementById('cancelModalText').textContent = 'Заказ #' + orderId + ' будет отменён. Это действие нельзя отменить.';
+  document.getElementById('cancelConfirmBtn').onclick = function() {
+    document.getElementById('cancel-form-' + orderId).submit();
+  };
+  document.getElementById('cancelModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCancelModal() {
+  document.getElementById('cancelModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('cancelModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCancelModal();
+});
+
+(function() {
+  function openAddr() {
+    document.getElementById('addressModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAddr() {
+    document.getElementById('addressModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  var btn1 = document.getElementById('openAddressModal');
+  var btn2 = document.getElementById('openAddressModalBtn');
+  var btn3 = document.getElementById('openAddressModalBtn2');
+  var closeBtn = document.getElementById('addressModalClose');
+  var overlay = document.getElementById('addressModal');
+
+  if (btn1) btn1.addEventListener('click', function(e) { e.preventDefault(); openAddr(); });
+  if (btn2) btn2.addEventListener('click', openAddr);
+  if (btn3) btn3.addEventListener('click', openAddr);
+  if (closeBtn) closeBtn.addEventListener('click', closeAddr);
+  if (overlay) overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeAddr();
+  });
+})();
+
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('order_placed') === '1') {
+    filterOrders('pending');
+
+    var toast = document.createElement('div');
+    toast.id = 'orderPlacedToast';
+    toast.style.cssText = 'position:fixed;bottom:32px;right:32px;z-index:9999;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);display:flex;align-items:flex-start;gap:14px;padding:18px 22px;max-width:360px;animation:toastIn 0.35s cubic-bezier(.4,0,.2,1);';
+    toast.innerHTML = '<div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg width="22" height="22" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700;font-size:15px;color:#111827;margin-bottom:3px;">Заказ успешно оформлен!</div><div style="font-size:13px;color:#6b7280;">Ваш заказ находится в обработке</div></div><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:20px;line-height:1;margin-left:4px;padding:0;">×</button>';
+
+    var style = document.createElement('style');
+    style.textContent = '@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(style);
+    document.body.appendChild(toast);
+
+    setTimeout(function() {
+      toast.style.transition = 'opacity 0.4s';
+      toast.style.opacity = '0';
+      setTimeout(function() { toast.remove(); }, 400);
+    }, 4000);
+
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+</script>
+{% endblock %}
