@@ -420,29 +420,7 @@
     });
   });
 
-  // Favourite toggle on detail page
-  var favBtn = document.querySelector('.pd-fav-btn[data-product-id]');
-  if (favBtn) {
-    favBtn.addEventListener('click', function() {
-      var id = favBtn.getAttribute('data-product-id');
-      fetch('/favourite/toggle/' + id + '/', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }
-      }).then(function(r) { return r.json(); })
-      .then(function(data) {
-        var svg = favBtn.querySelector('svg');
-        if (data.status === 'added') {
-          favBtn.classList.add('active');
-          svg.setAttribute('fill', 'currentColor');
-          showToast('Товар добавлен в избранное ❤️');
-        } else {
-          favBtn.classList.remove('active');
-          svg.setAttribute('fill', 'none');
-          showToast('Товар удалён из избранного', 'info');
-        }
-      });
-    });
-  }
+
 })();
 </script>
 {% endif %}

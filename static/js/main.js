@@ -77,7 +77,7 @@ function showToast(message, type) {
 }
 
 // Favourite toggle
-document.querySelectorAll('.product-card__btn--fav[data-product-id]').forEach(function(btn) {
+document.querySelectorAll('.product-card__btn--fav[data-product-id], .pd-fav-btn[data-product-id]').forEach(function(btn) {
   btn.addEventListener('click', function() {
     if (!window._userAuthenticated) {
       openModal('authModal');
