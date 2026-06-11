@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Order, OrderItem
 from .forms import CheckoutForm
+from .telegram import send_order_notification, send_cancel_notification
 from cart.models import Cart
 
 
@@ -26,6 +27,7 @@ def checkout(request):
                 quantity=item.quantity,
             )
         cart.items.all().delete()
+        send_order_notification(order)
         return redirect('/accounts/profile/?order_placed=1')
     return render(request, 'orders/checkout.html', {'cart': cart, 'form': form})
 
@@ -53,4 +55,5 @@ def cancel_order(request, pk):
     if order.status in ('pending', 'processing'):
         order.status = 'cancelled'
         order.save()
+        send_cancel_notification(order)
     return redirect('orders:detail', pk=pk)

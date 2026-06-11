@@ -103,14 +103,20 @@
             </a>
             <div class="product-card__footer">
               <div class="product-card__actions">
-                {% if user.is_authenticated %}
-                <button class="product-card__btn js-quick-buy"
-                        data-id="{{ product.pk }}"
-                        data-name="{{ product.name }}"
-                        data-price="{{ product.price }}"
-                        data-image="{% if product.image %}{{ product.image.url }}{% endif %}">Купить</button>
+                {% if product.availability_status == 'in_stock' %}
+                  {% if user.is_authenticated %}
+                  <button class="product-card__btn js-quick-buy"
+                          data-id="{{ product.pk }}"
+                          data-name="{{ product.name }}"
+                          data-price="{{ product.price }}"
+                          data-image="{% if product.image %}{{ product.image.url }}{% endif %}">Купить</button>
+                  {% else %}
+                  <a href="{{ product.get_absolute_url }}" class="product-card__btn">Купить</a>
+                  {% endif %}
+                {% elif product.availability_status == 'coming_soon' %}
+                  <span class="product-card__status product-card__status--soon">Скоро будет</span>
                 {% else %}
-                <a href="{{ product.get_absolute_url }}" class="product-card__btn">Купить</a>
+                  <span class="product-card__status product-card__status--out">Нет в наличии</span>
                 {% endif %}
                 <button class="product-card__btn product-card__btn--fav product-card__btn--icon {% if product.pk in fav_ids %}active{% endif %}"
                         data-product-id="{{ product.pk }}" title="В избранное">
@@ -313,6 +319,10 @@
   var currentPrice = 0;
 
   function getCookie(name) {
+    if (name === 'csrftoken') {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) return meta.getAttribute('content');
+    }
     var v = '; ' + document.cookie, p = v.split('; ' + name + '=');
     if (p.length === 2) return p.pop().split(';').shift();
   }

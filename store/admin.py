@@ -17,13 +17,17 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductImageInline]
-    list_display = ['name', 'category', 'price', 'stock', 'available']
-    list_filter = ['available', 'category']
-    list_editable = ['price', 'stock', 'available']
+    list_display = ['name', 'category', 'price', 'stock', 'availability_status', 'available']
+    list_filter = ['availability_status', 'available', 'category']
+    list_editable = ['price', 'stock', 'availability_status', 'available']
     prepopulated_fields = {'slug': ('name',)}
     fieldsets = (
         (None, {
-            'fields': ('category', 'name', 'slug', 'description', 'image', 'price', 'stock', 'available')
+            'fields': ('category', 'name', 'slug', 'description', 'image', 'price')
+        }),
+        ('Наличие', {
+            'fields': ('stock', 'availability_status', 'available'),
+            'description': 'stock — внутренний остаток (виден только администратору). availability_status — что показывается покупателям вместо кнопки «Купить».',
         }),
         ('Характеристики', {
             'fields': ('size', 'material', 'pieces'),

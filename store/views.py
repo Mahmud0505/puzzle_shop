@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from .models import Product, Category, Favourite
 from orders.models import Order, OrderItem
+from orders.telegram import send_order_notification
 
 PLACEHOLDER_CATEGORIES = [
     {'name': 'Пазлы',               'sub': 'Классические пазлы',    'count': 100, 'icon': '🧩'},
@@ -108,6 +109,7 @@ def quick_checkout(request):
         price=product.price,
         quantity=quantity,
     )
+    send_order_notification(order)
     return JsonResponse({'status': 'ok', 'order_id': order.pk})
 
 
@@ -143,7 +145,7 @@ def favourites_checkout(request):
             quantity=item.quantity,
         )
     Favourite.objects.filter(user=request.user).delete()
-
+    send_order_notification(order)
     return JsonResponse({'status': 'ok', 'order_id': order.pk})
 
 

@@ -79,19 +79,18 @@ function showToast(message, type) {
 // Favourite toggle
 document.querySelectorAll('.product-card__btn--fav[data-product-id]').forEach(function(btn) {
   btn.addEventListener('click', function() {
+    if (!window._userAuthenticated) {
+      openModal('authModal');
+      return;
+    }
     var id = btn.getAttribute('data-product-id');
     var csrf = getCookie('csrftoken');
     fetch('/favourite/toggle/' + id + '/', {
       method: 'POST',
       headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' }
     }).then(function(r) {
-      if (r.redirected || r.url.indexOf('/login') !== -1) {
-        openModal('authModal');
-        return null;
-      }
       return r.json();
     }).then(function(data) {
-      if (!data) return;
       var svg = btn.querySelector('svg');
       if (data.status === 'added') {
         btn.classList.add('active');
@@ -109,6 +108,10 @@ document.querySelectorAll('.product-card__btn--fav[data-product-id]').forEach(fu
 });
 
 function getCookie(name) {
+  if (name === 'csrftoken') {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.getAttribute('content');
+  }
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(';').shift();

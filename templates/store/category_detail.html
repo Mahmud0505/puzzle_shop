@@ -209,6 +209,10 @@
   var currentPrice = 0;
 
   function getCookie(name) {
+    if (name === 'csrftoken') {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) return meta.getAttribute('content');
+    }
     var v = '; ' + document.cookie, p = v.split('; ' + name + '=');
     if (p.length === 2) return p.pop().split(';').shift();
   }

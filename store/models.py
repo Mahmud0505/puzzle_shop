@@ -29,6 +29,15 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    AVAILABILITY_IN_STOCK = 'in_stock'
+    AVAILABILITY_OUT_OF_STOCK = 'out_of_stock'
+    AVAILABILITY_COMING_SOON = 'coming_soon'
+    AVAILABILITY_CHOICES = [
+        (AVAILABILITY_IN_STOCK, 'В наличии'),
+        (AVAILABILITY_OUT_OF_STOCK, 'Нет в наличии'),
+        (AVAILABILITY_COMING_SOON, 'Скоро будет'),
+    ]
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
@@ -40,6 +49,12 @@ class Product(models.Model):
     pieces = models.PositiveIntegerField('Кол-во элементов', null=True, blank=True)
     stock = models.PositiveIntegerField(default=0)
     available = models.BooleanField(default=True)
+    availability_status = models.CharField(
+        'Статус наличия',
+        max_length=20,
+        choices=AVAILABILITY_CHOICES,
+        default=AVAILABILITY_IN_STOCK,
+    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
