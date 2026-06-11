@@ -315,10 +315,12 @@
 </script>
 
 {% if user.is_authenticated %}
+{{ delivery_cost|json_script:"delivery-cost" }}
+{{ delivery_threshold|json_script:"delivery-threshold" }}
 <script>
 (function() {
-  var DELIVERY_COST = {{ delivery_cost }};
-  var DELIVERY_THRESHOLD = {{ delivery_threshold }};
+  var DELIVERY_COST = JSON.parse(document.getElementById('delivery-cost').textContent);
+  var DELIVERY_THRESHOLD = JSON.parse(document.getElementById('delivery-threshold').textContent);
   var modal = document.getElementById('quickCheckoutModal');
   if (!modal) return;
 
