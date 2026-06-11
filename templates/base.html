@@ -104,13 +104,13 @@
               <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
             </svg>
           </a>
-          <a href="#" class="footer__social-btn" title="Сайт">
+          <a href="https://t.me/puzzle_house_advice" target="_blank" rel="noopener" class="footer__social-btn" title="Telegram">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              <path d="M21.5 2.5 2.5 9.8l6.9 2.5 2.2 6.8 3.1-3.3 4.8 3.7 2-17Z"/>
+              <path d="M9.4 12.3 21.5 2.5"/>
             </svg>
           </a>
-          <a href="mailto:hello@puzzlehouse.com" class="footer__social-btn" title="Email">
+          <a href="mailto:puzzlehouse.tj@gmail.com" class="footer__social-btn" title="Email">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
             </svg>
@@ -123,19 +123,16 @@
         <div class="footer__col">
           <div class="footer__col-title">Магазин</div>
           <ul>
-            <li><a href="{% url 'store:product_list' %}">Пазлы</a></li>
-            <li><a href="{% url 'store:product_list' %}">Развивающие</a></li>
-            <li><a href="{% url 'store:product_list' %}">Настольные игры</a></li>
-            <li><a href="{% url 'store:product_list' %}">Новинки</a></li>
+            {% for cat in nav_categories %}
+            <li><a href="{{ cat.get_absolute_url }}">{{ cat.name }}</a></li>
+            {% endfor %}
           </ul>
         </div>
         <div class="footer__col">
           <div class="footer__col-title">Информация</div>
           <ul>
-            <li><a href="#">О нас</a></li>
+            <li><a href="#" id="aboutFooterBtn">О нас</a></li>
             <li><a href="#" id="deliveryFooterBtn">Доставка</a></li>
-            <li><a href="#">Возврат</a></li>
-            <li><a href="#">Гид по безопасности</a></li>
           </ul>
         </div>
       </div>
@@ -161,6 +158,57 @@
       <button id="logoutCancel" class="btn btn-outline" style="flex:1;justify-content:center;">Отмена</button>
       <button id="logoutConfirm" class="btn btn-primary" style="flex:1;justify-content:center;">Выйти</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== ABOUT MODAL ===== -->
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal">
+    <button class="modal__close" id="aboutClose">&times;</button>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+      </svg>
+      О нас
+    </h3>
+
+    <div class="delivery-item">
+      <div class="delivery-icon">🧩</div>
+      <div>
+        <div class="delivery-item__title">Puzzle House</div>
+        <div class="delivery-item__value">Мы — магазин качественных пазлов и развивающих игр для детей и взрослых. Наша миссия — вдохновлять на творчество, развивать мышление и приносить радость каждой семье.</div>
+      </div>
+    </div>
+
+    <div class="delivery-item">
+      <div class="delivery-icon">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="delivery-item__title">Где мы находимся</div>
+        <div class="delivery-item__value">Таджикистан, Душанбе</div>
+      </div>
+    </div>
+
+    <div class="delivery-item">
+      <div class="delivery-icon">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <div>
+        <div class="delivery-item__title">Связаться с нами</div>
+        <div class="delivery-item__value">
+          <a href="https://www.instagram.com/puzzle_house.tj" target="_blank" rel="noopener" style="color:var(--gray-800);text-decoration:none;">Instagram: @puzzle_house.tj</a><br>
+          <a href="https://t.me/puzzle_house_advice" target="_blank" rel="noopener" style="color:var(--gray-800);text-decoration:none;">Telegram: @puzzle_house_advice</a><br>
+          <a href="mailto:puzzlehouse.tj@gmail.com" style="color:var(--gray-800);text-decoration:none;">Email: puzzlehouse.tj@gmail.com</a>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="aboutModalClose" style="width:100%;justify-content:center;margin-top:20px;">Закрыть</button>
   </div>
 </div>
 
@@ -311,6 +359,15 @@
   // Footer delivery link
   document.getElementById('deliveryFooterBtn').addEventListener('click', e => {
     e.preventDefault(); openModal('deliveryModal');
+  });
+  // Footer about link
+  document.getElementById('aboutFooterBtn').addEventListener('click', e => {
+    e.preventDefault(); openModal('aboutModal');
+  });
+  document.getElementById('aboutClose').addEventListener('click', () => closeModal('aboutModal'));
+  document.getElementById('aboutModalClose').addEventListener('click', () => closeModal('aboutModal'));
+  document.getElementById('aboutModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('aboutModal')) closeModal('aboutModal');
   });
   // Auth tab style
   document.querySelectorAll('.auth-tab').forEach(tab => {
