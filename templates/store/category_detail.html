@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static store_tags %}
 
 {% block title %}{{ category.name }} — Puzzle House{% endblock %}
 
@@ -59,7 +59,7 @@
                   </svg>
                 </button>
               </div>
-              <span class="product-card__price">${{ product.price }}</span>
+              <span class="product-card__price">{{ product.price|somoni }}</span>
             </div>
           </div>
         {% endfor %}
@@ -169,7 +169,7 @@
         <div class="co-summary">
           <div class="co-summary__row">
             <span>Товаров (<span id="qcCount">1</span>)</span>
-            <span id="qcSubtotal">$0.00</span>
+            <span id="qcSubtotal">0,00с</span>
           </div>
           <div class="co-summary__row">
             <span>Доставка</span>
@@ -178,7 +178,7 @@
           <div class="co-summary__divider"></div>
           <div class="co-summary__total">
             <span>Итого</span>
-            <span id="qcTotal">$0.00</span>
+            <span id="qcTotal">0,00с</span>
           </div>
         </div>
         <button class="btn btn-primary co-confirm-btn" id="qcConfirmBtn"
@@ -202,6 +202,7 @@
 (function() {
   var DELIVERY_COST = {{ delivery_cost }};
   var DELIVERY_THRESHOLD = {{ delivery_threshold }};
+  function fmtPrice(v) { return v.toFixed(2).replace('.', ',') + 'с'; }
   var modal = document.getElementById('quickCheckoutModal');
   if (!modal) return;
 
@@ -223,17 +224,17 @@
     var delivery = qty >= DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
     var total = subtotal + delivery;
     document.getElementById('qcCount').textContent = qty;
-    document.getElementById('qcSubtotal').textContent = '$' + subtotal.toFixed(2);
-    document.getElementById('qcItemPrice').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('qcSubtotal').textContent = fmtPrice(subtotal);
+    document.getElementById('qcItemPrice').textContent = fmtPrice(subtotal);
     var deliveryEl = document.getElementById('qcDelivery');
     if (delivery === 0) {
       deliveryEl.textContent = 'Бесплатно';
       deliveryEl.classList.add('fav-delivery--free');
     } else {
-      deliveryEl.textContent = '$' + delivery.toFixed(2);
+      deliveryEl.textContent = fmtPrice(delivery);
       deliveryEl.classList.remove('fav-delivery--free');
     }
-    document.getElementById('qcTotal').textContent = '$' + total.toFixed(2);
+    document.getElementById('qcTotal').textContent = fmtPrice(total);
     document.getElementById('qcDec').disabled = qty <= 1;
   }
 

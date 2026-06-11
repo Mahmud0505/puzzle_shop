@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static store_tags %}
 
 {% block title %}Заказ #{{ order.pk }} — Puzzle House{% endblock %}
 
@@ -40,15 +40,15 @@
           </div>
           <div class="order-detail-item__info">
             <div class="order-detail-item__name">{{ item.product.name }}</div>
-            <div class="order-detail-item__qty">{{ item.quantity }} шт. × ${{ item.price }}</div>
+            <div class="order-detail-item__qty">{{ item.quantity }} шт. × {{ item.price|somoni }}</div>
           </div>
-          <div class="order-detail-item__total">${{ item.get_total_price }}</div>
+          <div class="order-detail-item__total">{{ item.get_total_price|somoni }}</div>
         </div>
         {% endfor %}
 
         <div class="order-detail-total">
           <span>Итого</span>
-          <span>${{ order.total_price }}</span>
+          <span>{{ order.total_price|somoni }}</span>
         </div>
       </div>
 

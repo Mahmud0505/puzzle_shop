@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static store_tags %}
 
 {% block title %}{{ product.name }} — Puzzle House{% endblock %}
 
@@ -65,7 +65,7 @@
 
         <!-- Price row -->
         <div class="pd-price-row">
-          <span class="pd-price">${{ product.price }}</span>
+          <span class="pd-price">{{ product.price|somoni }}</span>
           {% if product.availability_status == 'in_stock' %}
             <span class="pd-stock pd-stock--in">
               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -260,7 +260,7 @@
         <div class="co-summary">
           <div class="co-summary__row">
             <span>Товаров (<span id="qcCount">1</span>)</span>
-            <span id="qcSubtotal">$0.00</span>
+            <span id="qcSubtotal">0,00с</span>
           </div>
           <div class="co-summary__row">
             <span>Доставка</span>
@@ -269,7 +269,7 @@
           <div class="co-summary__divider"></div>
           <div class="co-summary__total">
             <span>Итого</span>
-            <span id="qcTotal">$0.00</span>
+            <span id="qcTotal">0,00с</span>
           </div>
         </div>
         <button class="btn btn-primary co-confirm-btn" id="qcConfirmBtn"
@@ -321,6 +321,7 @@
 (function() {
   var DELIVERY_COST = JSON.parse(document.getElementById('delivery-cost').textContent);
   var DELIVERY_THRESHOLD = JSON.parse(document.getElementById('delivery-threshold').textContent);
+  function fmtPrice(v) { return v.toFixed(2).replace('.', ',') + 'с'; }
   var modal = document.getElementById('quickCheckoutModal');
   if (!modal) return;
 
@@ -342,17 +343,17 @@
     var delivery = qty >= DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
     var total = subtotal + delivery;
     document.getElementById('qcCount').textContent = qty;
-    document.getElementById('qcSubtotal').textContent = '$' + subtotal.toFixed(2);
-    document.getElementById('qcItemPrice').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('qcSubtotal').textContent = fmtPrice(subtotal);
+    document.getElementById('qcItemPrice').textContent = fmtPrice(subtotal);
     var deliveryEl = document.getElementById('qcDelivery');
     if (delivery === 0) {
       deliveryEl.textContent = 'Бесплатно';
       deliveryEl.classList.add('fav-delivery--free');
     } else {
-      deliveryEl.textContent = '$' + delivery.toFixed(2);
+      deliveryEl.textContent = fmtPrice(delivery);
       deliveryEl.classList.remove('fav-delivery--free');
     }
-    document.getElementById('qcTotal').textContent = '$' + total.toFixed(2);
+    document.getElementById('qcTotal').textContent = fmtPrice(total);
     document.getElementById('qcDec').disabled = qty <= 1;
   }
 

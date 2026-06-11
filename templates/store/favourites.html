@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static store_tags %}
 
 {% block title %}Избранное — Puzzle House{% endblock %}
 
@@ -40,7 +40,7 @@
           <div class="fav-item__info">
             <div class="fav-item__name">{{ item.product.name }}</div>
             <div class="fav-item__cat">{{ item.product.category.name }}</div>
-            <div class="fav-item__price">${{ item.product.price }}</div>
+            <div class="fav-item__price">{{ item.product.price|somoni }}</div>
             <div class="fav-item__qty">
               <button class="fav-qty-btn" data-fav="{{ item.pk }}" data-action="dec">−</button>
               <span class="fav-qty-val" id="qty-{{ item.pk }}">{{ item.quantity }}</span>
@@ -62,18 +62,18 @@
         <div class="fav-summary__title">Сводка заказа</div>
         <div class="fav-summary__row">
           <span>Товаров (<span id="sumCount">{{ count }}</span>)</span>
-          <span id="sumSubtotal">${{ subtotal }}</span>
+          <span id="sumSubtotal">{{ subtotal|somoni }}</span>
         </div>
         <div class="fav-summary__row">
           <span>Доставка</span>
           <span id="sumDelivery" class="{% if count >= delivery_threshold %}fav-delivery--free{% endif %}">
-            {% if count >= delivery_threshold %}Бесплатно{% else %}${{ delivery_cost }}.00{% endif %}
+            {% if count >= delivery_threshold %}Бесплатно{% else %}{{ delivery_cost|somoni }}{% endif %}
           </span>
         </div>
         <div class="fav-summary__divider"></div>
         <div class="fav-summary__total">
           <span>Итого</span>
-          <span id="sumTotal">${{ grand_total }}</span>
+          <span id="sumTotal">{{ grand_total|somoni }}</span>
         </div>
         <button class="btn btn-primary fav-summary__btn" id="openCheckoutBtn">Оформить заказ</button>
         <p class="fav-summary__note">Нажимая "Оформить заказ", вы соглашаетесь с условиями продажи</p>
@@ -135,7 +135,7 @@
           </div>
           <div class="co-item__info">
             <div class="co-item__name">{{ item.product.name }}</div>
-            <div class="co-item__price" id="co-price-{{ item.pk }}">${{ item.get_total_price }}</div>
+            <div class="co-item__price" id="co-price-{{ item.pk }}">{{ item.get_total_price|somoni }}</div>
           </div>
           <div class="co-item__controls">
             <button class="co-qty-btn" data-fav="{{ item.pk }}" data-action="dec">−</button>
@@ -208,18 +208,18 @@
         <div class="co-summary">
           <div class="co-summary__row">
             <span>Товаров (<span id="coCount">{{ count }}</span>)</span>
-            <span id="coSubtotal">${{ subtotal }}</span>
+            <span id="coSubtotal">{{ subtotal|somoni }}</span>
           </div>
           <div class="co-summary__row">
             <span>Доставка</span>
             <span id="coDelivery" class="{% if count >= delivery_threshold %}fav-delivery--free{% endif %}">
-              {% if count >= delivery_threshold %}Бесплатно{% else %}${{ delivery_cost }}.00{% endif %}
+              {% if count >= delivery_threshold %}Бесплатно{% else %}{{ delivery_cost|somoni }}{% endif %}
             </span>
           </div>
           <div class="co-summary__divider"></div>
           <div class="co-summary__total">
             <span>Итого</span>
-            <span id="coTotal">${{ grand_total }}</span>
+            <span id="coTotal">{{ grand_total|somoni }}</span>
           </div>
         </div>
 
@@ -257,6 +257,7 @@
 
   var DELIVERY_COST = {{ delivery_cost }};
   var DELIVERY_THRESHOLD = {{ delivery_threshold }};
+  function fmtPrice(v) { return v.toFixed(2).replace('.', ',') + 'с'; }
 
   /* ---- shared recalc: updates both main page and modal summaries ---- */
   function recalcAll() {
@@ -274,14 +275,14 @@
 
     // main summary
     setEl('sumCount', count);
-    setEl('sumSubtotal', '$' + subtotal.toFixed(2));
-    setEl('sumTotal', '$' + grand.toFixed(2));
+    setEl('sumSubtotal', fmtPrice(subtotal));
+    setEl('sumTotal', fmtPrice(grand));
     setDelivery('sumDelivery', delivery);
 
     // checkout modal summary
     setEl('coCount', count);
-    setEl('coSubtotal', '$' + subtotal.toFixed(2));
-    setEl('coTotal', '$' + grand.toFixed(2));
+    setEl('coSubtotal', fmtPrice(subtotal));
+    setEl('coTotal', fmtPrice(grand));
     setDelivery('coDelivery', delivery);
   }
 
@@ -297,7 +298,7 @@
       el.textContent = 'Бесплатно';
       el.classList.add('fav-delivery--free');
     } else {
-      el.textContent = '$' + DELIVERY_COST.toFixed(2);
+      el.textContent = fmtPrice(DELIVERY_COST);
       el.classList.remove('fav-delivery--free');
     }
   }
@@ -331,7 +332,7 @@
         if (coItem) {
           var price = parseFloat(coItem.dataset.price);
           var priceEl = document.getElementById('co-price-' + favId);
-          if (priceEl) priceEl.textContent = '$' + (price * data.quantity).toFixed(2);
+          if (priceEl) priceEl.textContent = fmtPrice(price * data.quantity);
         }
         updateDecBtns(favId, data.quantity);
         recalcAll();

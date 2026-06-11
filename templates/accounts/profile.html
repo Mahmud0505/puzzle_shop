@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static store_tags %}
 
 {% block title %}Личный кабинет — Puzzle House{% endblock %}
 
@@ -194,7 +194,7 @@
                 <div class="profile-order-count">{{ order.items.count }} товар{{ order.items.count|pluralize:"а,ов" }}</div>
               </div>
               <div class="profile-order-right">
-                <div class="profile-order-price">${{ order.total_price }}</div>
+                <div class="profile-order-price">{{ order.total_price|somoni }}</div>
                 <span class="profile-order-badge profile-order-badge--{{ order.status }}">
                   {{ order.get_status_display }}
                 </span>

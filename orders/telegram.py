@@ -24,10 +24,14 @@ def _send(text):
         logger.warning('Telegram notification failed: %s', e)
 
 
+def _fmt(value):
+    return f'{value:,.2f}'.replace(',', ' ').replace('.', ',') + 'с'
+
+
 def send_order_notification(order):
     items = order.items.select_related('product').all()
     items_text = '\n'.join(
-        f'  • {item.product.name} × {item.quantity} = ${item.price * item.quantity:.2f}'
+        f'  • {item.product.name} × {item.quantity} = {_fmt(item.price * item.quantity)}'
         for item in items
     )
     subtotal = sum(item.price * item.quantity for item in items)
@@ -35,7 +39,7 @@ def send_order_notification(order):
     if delivery <= 0:
         delivery_line = '🚚 Доставка: Бесплатно'
     else:
-        delivery_line = f'🚚 Доставка: ${delivery:.2f}'
+        delivery_line = f'🚚 Доставка: {_fmt(delivery)}'
 
     text = (
         f'🛒 Новый заказ #{order.pk}\n'
@@ -47,7 +51,7 @@ def send_order_notification(order):
         f'📦 Товары:\n{items_text}\n'
         f'\n'
         f'{delivery_line}\n'
-        f'💰 Итого: ${order.total_price:.2f}'
+        f'💰 Итого: {_fmt(order.total_price)}'
     )
     _send(text)
 
@@ -66,6 +70,6 @@ def send_cancel_notification(order):
         f'\n'
         f'📦 Товары:\n{items_text}\n'
         f'\n'
-        f'💰 Сумма заказа: ${order.total_price:.2f}'
+        f'💰 Сумма заказа: {_fmt(order.total_price)}'
     )
     _send(text)

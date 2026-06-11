@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load store_tags %}
 
 {% block title %}Корзина — Puzzle House{% endblock %}
 
@@ -22,8 +23,8 @@
             <div style="color:#666;font-size:13px;">{{ item.product.category.name }}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:700;font-size:16px;margin-bottom:8px;">${{ item.get_total_price }}</div>
-            <div style="color:#888;font-size:13px;margin-bottom:8px;">{{ item.quantity }} шт. × ${{ item.product.price }}</div>
+            <div style="font-weight:700;font-size:16px;margin-bottom:8px;">{{ item.get_total_price|somoni }}</div>
+            <div style="color:#888;font-size:13px;margin-bottom:8px;">{{ item.quantity }} шт. × {{ item.product.price|somoni }}</div>
             <form method="post" action="{% url 'cart:remove' item.pk %}">
               {% csrf_token %}
               <button type="submit" style="background:none;border:none;color:#e53e3e;font-size:13px;cursor:pointer;font-family:inherit;">Удалить</button>
@@ -34,7 +35,7 @@
 
       <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:20px;display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:16px;font-weight:600;">Итого:</span>
-        <span style="font-size:22px;font-weight:700;">${{ cart.get_total_price }}</span>
+        <span style="font-size:22px;font-weight:700;">{{ cart.get_total_price|somoni }}</span>
       </div>
 
       <a href="{% url 'orders:checkout' %}" class="btn btn-primary" style="justify-content:center;text-align:center;">
