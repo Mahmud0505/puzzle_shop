@@ -164,12 +164,15 @@ def product_list(request):
     if request.user.is_authenticated:
         fav_ids = set(Favourite.objects.filter(user=request.user).values_list('product_id', flat=True))
 
+    db_has_products = Product.objects.filter(available=True).exists() if q else products.exists()
+
     return render(request, 'store/product_list.html', {
         'categories': categories,
         'page_obj': page_obj,
         'placeholder_categories': PLACEHOLDER_CATEGORIES if not categories.exists() else [],
-        'placeholder_products': PLACEHOLDER_PRODUCTS if not products.exists() else [],
+        'placeholder_products': PLACEHOLDER_PRODUCTS if not db_has_products and not q else [],
         'search_query': q,
+        'search_no_results': bool(q and not products.exists()),
         'fav_ids': fav_ids,
         'delivery_cost': DELIVERY_COST,
         'delivery_threshold': DELIVERY_THRESHOLD,

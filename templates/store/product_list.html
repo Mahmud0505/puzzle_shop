@@ -6,7 +6,7 @@
 {% block content %}
 
 <!-- ===== HERO ===== -->
-{% if not page_obj.number or page_obj.number == 1 %}
+{% if not search_query and page_obj.number == 1 %}
 <section class="hero">
   <div class="hero__content">
     <h1 class="hero__title">Откройте радость<br>творчества</h1>
@@ -25,7 +25,7 @@
 {% endif %}
 
 <!-- ===== CATEGORIES ===== -->
-{% if not page_obj.number or page_obj.number == 1 %}
+{% if not search_query and page_obj.number == 1 %}
 <section class="categories" id="categories">
   <div class="container">
     <div class="section-header">
@@ -80,11 +80,23 @@
 <section class="products" id="products">
   <div class="container">
     <div class="section-header">
-      <h2>Популярное на этой неделе</h2>
-      <p>Любимые товары нашего сообщества для бесконечных часов увлекательной игры.</p>
+      {% if search_query %}
+        <h2>Результаты поиска: «{{ search_query }}»</h2>
+        <p>{% if not search_no_results %}Найдено товаров: {{ page_obj.paginator.count }}{% endif %}</p>
+      {% else %}
+        <h2>Популярное на этой неделе</h2>
+        <p>Любимые товары нашего сообщества для бесконечных часов увлекательной игры.</p>
+      {% endif %}
     </div>
 
-    {% if page_obj %}
+    {% if search_no_results %}
+      <div class="search-empty">
+        <div class="search-empty__icon">🔍</div>
+        <h3 class="search-empty__title">Ничего не найдено</h3>
+        <p class="search-empty__desc">По запросу «{{ search_query }}» товаров не нашлось.<br>Попробуйте другое слово или посмотрите все товары.</p>
+        <a href="/" class="btn btn-primary">Все товары</a>
+      </div>
+    {% elif page_obj %}
       <div class="products__grid">
         {% for product in page_obj %}
           <div class="product-card">
@@ -201,7 +213,7 @@
         </svg>
         Подписаться в Instagram
       </a>
-      <a href="https://t.me/puzzle_hose" target="_blank" rel="noopener noreferrer" class="social__btn">
+      <a href="https://t.me/puzzle_house_advice" target="_blank" rel="noopener noreferrer" class="social__btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8l-1.68 7.92c-.12.56-.46.7-.93.44l-2.56-1.88-1.23 1.19c-.14.14-.26.26-.52.26l.18-2.6 4.76-4.3c.2-.18-.04-.28-.32-.1L7.32 14.6l-2.52-.79c-.55-.17-.56-.55.12-.82l9.84-3.8c.46-.17.86.11.88.61z" fill="#0088CC"/>
         </svg>

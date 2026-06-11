@@ -174,12 +174,35 @@ document.querySelectorAll('.phone-digits-input').forEach(function(input) {
   });
 })();
 
-// Search form submit
-const searchForm = document.getElementById('searchForm');
-if (searchForm) {
-  searchForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const q = searchForm.querySelector('input').value.trim();
-    if (q) window.location.href = `/?q=${encodeURIComponent(q)}`;
+// Search panel toggle
+(function() {
+  var searchBtn = document.getElementById('searchBtn');
+  var searchPanel = document.getElementById('searchPanel');
+  var searchClose = document.getElementById('searchClose');
+  var searchInput = document.getElementById('searchInput');
+
+  function openSearch() {
+    searchPanel.classList.add('open');
+    setTimeout(function() { if (searchInput) searchInput.focus(); }, 80);
+  }
+  function closeSearch() {
+    searchPanel.classList.remove('open');
+  }
+
+  if (searchBtn) searchBtn.addEventListener('click', function() {
+    searchPanel.classList.contains('open') ? closeSearch() : openSearch();
   });
-}
+  if (searchClose) searchClose.addEventListener('click', closeSearch);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSearch();
+  });
+
+  var searchForm = document.getElementById('searchForm');
+  if (searchForm) {
+    searchForm.addEventListener('submit', function(e) {
+      var q = searchInput ? searchInput.value.trim() : '';
+      if (!q) { e.preventDefault(); return; }
+    });
+  }
+})();
