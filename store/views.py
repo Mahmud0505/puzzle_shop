@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
+from django.db import transaction
 from .models import Product, Category, Favourite
 from orders.models import Order, OrderItem
 from orders.telegram import send_order_notification
@@ -85,30 +86,44 @@ def quick_checkout(request):
     from decimal import Decimal
     product_id = request.POST.get('product_id')
     quantity = max(1, int(request.POST.get('quantity', 1)))
-    product = get_object_or_404(Product, pk=product_id)
 
-    profile = request.user.profile
-    subtotal = product.price * quantity
-    delivery = Decimal('0') if quantity >= DELIVERY_THRESHOLD else Decimal(str(DELIVERY_COST))
-    total = subtotal + delivery
+    with transaction.atomic():
+        product = Product.objects.select_for_update().filter(pk=product_id, available=True).first()
+        if not product:
+            return JsonResponse({'error': 'unavailable'}, status=400)
 
-    address_parts = [p for p in [profile.city, profile.address] if p]
-    address = ', '.join(address_parts) or '—'
+        if product.availability_status != Product.AVAILABILITY_IN_STOCK:
+            return JsonResponse({'error': 'unavailable'}, status=400)
+        if product.stock < quantity:
+            return JsonResponse({'error': 'not_enough_stock', 'available': product.stock}, status=400)
 
-    order = Order.objects.create(
-        user=request.user,
-        full_name=request.user.username,
-        email=request.user.email or '',
-        phone=profile.phone or '',
-        address=address,
-        total_price=total,
-    )
-    OrderItem.objects.create(
-        order=order,
-        product=product,
-        price=product.price,
-        quantity=quantity,
-    )
+        profile = request.user.profile
+        subtotal = product.price * quantity
+        delivery = Decimal('0') if quantity >= DELIVERY_THRESHOLD else Decimal(str(DELIVERY_COST))
+        total = subtotal + delivery
+
+        address_parts = [p for p in [profile.city, profile.address] if p]
+        address = ', '.join(address_parts) or '—'
+
+        order = Order.objects.create(
+            user=request.user,
+            full_name=request.user.username,
+            email=request.user.email or '',
+            phone=profile.phone or '',
+            address=address,
+            total_price=total,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            price=product.price,
+            quantity=quantity,
+        )
+        product.stock -= quantity
+        if product.stock == 0:
+            product.availability_status = Product.AVAILABILITY_OUT_OF_STOCK
+        product.save(update_fields=['stock', 'availability_status'])
+
     send_order_notification(order)
     return JsonResponse({'status': 'ok', 'order_id': order.pk})
 
@@ -120,31 +135,56 @@ def favourites_checkout(request):
     if not items:
         return JsonResponse({'error': 'empty'}, status=400)
 
-    profile = request.user.profile
-    count = sum(i.quantity for i in items)
-    subtotal = sum(i.get_total_price() for i in items)
-    delivery = 0 if count >= DELIVERY_THRESHOLD else DELIVERY_COST
-    total = subtotal + delivery
+    with transaction.atomic():
+        product_ids = [item.product_id for item in items]
+        locked_products = {
+            p.pk: p for p in Product.objects.select_for_update().filter(pk__in=product_ids, available=True)
+        }
 
-    address_parts = [p for p in [profile.city, profile.address] if p]
-    address = ', '.join(address_parts) or '—'
+        for item in items:
+            product = locked_products.get(item.product_id)
+            if not product:
+                return JsonResponse({'error': 'unavailable', 'product': item.product.name}, status=400)
+            if product.availability_status != Product.AVAILABILITY_IN_STOCK:
+                return JsonResponse({'error': 'unavailable', 'product': product.name}, status=400)
+            if product.stock < item.quantity:
+                return JsonResponse(
+                    {'error': 'not_enough_stock', 'product': product.name, 'available': product.stock},
+                    status=400,
+                )
 
-    order = Order.objects.create(
-        user=request.user,
-        full_name=request.user.username,
-        email=request.user.email or '',
-        phone=profile.phone or '',
-        address=address,
-        total_price=total,
-    )
-    for item in items:
-        OrderItem.objects.create(
-            order=order,
-            product=item.product,
-            price=item.product.price,
-            quantity=item.quantity,
+        profile = request.user.profile
+        count = sum(i.quantity for i in items)
+        subtotal = sum(i.get_total_price() for i in items)
+        delivery = 0 if count >= DELIVERY_THRESHOLD else DELIVERY_COST
+        total = subtotal + delivery
+
+        address_parts = [p for p in [profile.city, profile.address] if p]
+        address = ', '.join(address_parts) or '—'
+
+        order = Order.objects.create(
+            user=request.user,
+            full_name=request.user.username,
+            email=request.user.email or '',
+            phone=profile.phone or '',
+            address=address,
+            total_price=total,
         )
-    Favourite.objects.filter(user=request.user).delete()
+        for item in items:
+            product = locked_products[item.product_id]
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                price=product.price,
+                quantity=item.quantity,
+            )
+            product.stock -= item.quantity
+            if product.stock == 0:
+                product.availability_status = Product.AVAILABILITY_OUT_OF_STOCK
+            product.save(update_fields=['stock', 'availability_status'])
+
+        Favourite.objects.filter(user=request.user).delete()
+
     send_order_notification(order)
     return JsonResponse({'status': 'ok', 'order_id': order.pk})
 
