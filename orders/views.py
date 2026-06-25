@@ -53,7 +53,16 @@ def cancel_order(request, pk):
         return redirect('orders:detail', pk=pk)
     order = get_object_or_404(Order, pk=pk, user=request.user)
     if order.status in ('pending', 'processing'):
+        for item in order.items.select_related('product'):
+            product = item.product
+            product.stock += item.quantity
+            if product.availability_status == 'out_of_stock' and product.stock > 0:
+                product.availability_status = 'in_stock'
+            product.save(update_fields=['stock', 'availability_status'])
         order.status = 'cancelled'
         order.save()
         send_cancel_notification(order)
+    next_url = request.POST.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('orders:detail', pk=pk)
