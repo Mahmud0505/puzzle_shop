@@ -48,9 +48,5 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 
-# images
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.webp
+# user-uploaded media (handled at runtime, not in git)
+media/
