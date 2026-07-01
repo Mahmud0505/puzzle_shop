@@ -130,6 +130,7 @@
                           data-id="{{ product.pk }}"
                           data-name="{{ product.name }}"
                           data-price="{{ product.effective_price }}"
+                          data-stock="{{ product.stock }}"
                           data-image="{% if product.image %}{{ product.image.url }}{% endif %}">Купить</button>
                   {% else %}
                   <a href="{{ product.get_absolute_url }}" class="product-card__btn">Купить</a>
@@ -378,6 +379,7 @@
 
   var currentProductId = null;
   var currentPrice = 0;
+  var currentStock = 0;
 
   function getCookie(name) {
     if (name === 'csrftoken') {
@@ -406,12 +408,15 @@
     }
     document.getElementById('qcTotal').textContent = fmtPrice(total);
     document.getElementById('qcDec').disabled = qty <= 1;
+    var incBtn = document.getElementById('qcInc');
+    incBtn.disabled = currentStock > 0 && qty >= currentStock;
   }
 
   document.querySelectorAll('.js-quick-buy').forEach(function(btn) {
     btn.addEventListener('click', function() {
       currentProductId = btn.dataset.id;
       currentPrice = parseFloat(btn.dataset.price);
+      currentStock = parseInt(btn.dataset.stock) || 0;
       var name = btn.dataset.name;
       var image = btn.dataset.image;
       document.getElementById('qcQty').textContent = '1';
@@ -428,7 +433,13 @@
 
   document.getElementById('qcInc').addEventListener('click', function() {
     var el = document.getElementById('qcQty');
-    el.textContent = parseInt(el.textContent) + 1;
+    var qty = parseInt(el.textContent);
+    if (currentStock > 0 && qty >= currentStock) {
+      showStockMsg(currentStock);
+      this.disabled = true;
+      return;
+    }
+    el.textContent = qty + 1;
     recalc();
   });
   document.getElementById('qcDec').addEventListener('click', function() {

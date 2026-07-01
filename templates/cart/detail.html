@@ -4,56 +4,199 @@
 {% block title %}Корзина — Puzzle House{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 60px 0;">
-  <h1 style="font-size:28px;font-weight:700;margin-bottom:32px;">Корзина</h1>
+<div class="container" style="padding:48px 0 80px;">
+  <h1 style="font-size:26px;font-weight:800;margin-bottom:32px;color:var(--black);">Корзина</h1>
 
   {% if cart.items.all %}
-    <div style="display:flex;flex-direction:column;gap:16px;max-width:700px;">
-      {% for item in cart.items.all %}
-        <div style="display:flex;align-items:center;gap:16px;background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:16px;">
-          <div style="width:72px;height:72px;border-radius:8px;overflow:hidden;background:#f5f5f5;flex-shrink:0;">
+    <div class="cart-layout">
+
+      <!-- Items column -->
+      <div class="cart-items" id="cartItems">
+        {% for item in cart.items.all %}
+        <div class="cart-item" id="cart-item-{{ item.pk }}"
+             data-item-id="{{ item.pk }}"
+             data-stock="{{ item.product.stock }}"
+             data-price="{{ item.product.effective_price }}">
+
+          <!-- Image -->
+          <div class="cart-item__img">
             {% if item.product.image %}
-              <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width:100%;height:100%;object-fit:cover;">
+              <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
             {% else %}
-              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;">🧩</div>
+              <span style="font-size:32px;">🧩</span>
             {% endif %}
           </div>
-          <div style="flex:1;">
-            <div style="font-weight:600;font-size:15px;margin-bottom:4px;">{{ item.product.name }}</div>
-            <div style="color:#666;font-size:13px;">{{ item.product.category.name }}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-weight:700;font-size:16px;margin-bottom:8px;">{{ item.get_total_price|somoni }}</div>
-            <div style="color:#888;font-size:13px;margin-bottom:8px;">
-              {{ item.quantity }} шт. ×
+
+          <!-- Info -->
+          <div class="cart-item__info">
+            <a href="{{ item.product.get_absolute_url }}" class="cart-item__name">{{ item.product.name }}</a>
+            <div class="cart-item__cat">{{ item.product.category.name }}</div>
+
+            <!-- Unit price -->
+            <div class="cart-item__unit-price">
               {% if item.product.discount %}
                 <span class="cart-price--new">{{ item.product.effective_price|somoni }}</span>
                 <span class="cart-price--old">{{ item.product.price|somoni }}</span>
                 <span class="cart-discount-badge">-{{ item.product.discount }}%</span>
               {% else %}
-                {{ item.product.price|somoni }}
+                <span>{{ item.product.price|somoni }}</span>
               {% endif %}
             </div>
-            <form method="post" action="{% url 'cart:remove' item.pk %}">
+
+            <!-- Stock warning (inline, hidden by default) -->
+            <div class="cart-stock-warn" id="cart-stock-warn-{{ item.pk }}" style="display:none;"></div>
+          </div>
+
+          <!-- Right side: total + controls + remove -->
+          <div class="cart-item__right">
+            <div class="cart-item__total" id="cart-total-{{ item.pk }}">{{ item.get_total_price|somoni }}</div>
+
+            <div class="cart-qty">
+              <button class="cart-qty__btn cart-qty__btn--dec"
+                      data-item="{{ item.pk }}" data-action="dec"
+                      {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
+              <span class="cart-qty__val" id="cart-qty-{{ item.pk }}">{{ item.quantity }}</span>
+              <button class="cart-qty__btn cart-qty__btn--inc"
+                      data-item="{{ item.pk }}" data-action="inc"
+                      {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+            </div>
+
+            <form method="post" action="{% url 'cart:remove' item.pk %}" style="margin-top:8px;">
               {% csrf_token %}
-              <button type="submit" style="background:none;border:none;color:#e53e3e;font-size:13px;cursor:pointer;font-family:inherit;">Удалить</button>
+              <button type="submit" class="cart-item__remove">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+                Удалить
+              </button>
             </form>
           </div>
         </div>
-      {% endfor %}
-
-      <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:20px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:16px;font-weight:600;">Итого:</span>
-        <span style="font-size:22px;font-weight:700;">{{ cart.get_total_price|somoni }}</span>
+        {% endfor %}
       </div>
 
-      <a href="{% url 'orders:checkout' %}" class="btn btn-primary" style="justify-content:center;text-align:center;">
-        Оформить заказ
-      </a>
+      <!-- Summary column -->
+      <div class="cart-summary">
+        <div class="cart-summary__title">Итого</div>
+        <div class="cart-summary__row">
+          <span>Товаров</span>
+          <span id="cartTotalItems">{{ cart.items.count }}</span>
+        </div>
+        <div class="cart-summary__divider"></div>
+        <div class="cart-summary__total">
+          <span>К оплате</span>
+          <span id="cartGrandTotal">{{ cart.get_total_price|somoni }}</span>
+        </div>
+        <a href="{% url 'orders:checkout' %}" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:20px;">
+          Оформить заказ
+        </a>
+        <a href="{% url 'store:product_list' %}" class="cart-summary__continue">
+          ← Продолжить покупки
+        </a>
+      </div>
+
     </div>
   {% else %}
-    <p style="color:#666;font-size:16px;">Корзина пуста.</p>
-    <a href="{% url 'store:product_list' %}" class="btn btn-primary" style="display:inline-flex;margin-top:16px;">Перейти в магазин</a>
+    <div style="text-align:center;padding:60px 0;">
+      <div style="font-size:56px;margin-bottom:16px;">🛒</div>
+      <p style="color:var(--gray-600);font-size:16px;margin-bottom:24px;">Корзина пуста.</p>
+      <a href="{% url 'store:product_list' %}" class="btn btn-primary" style="display:inline-flex;">Перейти в магазин</a>
+    </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  function getCookie(name) {
+    if (name === 'csrftoken') {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) return meta.getAttribute('content');
+    }
+    var v = '; ' + document.cookie, p = v.split('; ' + name + '=');
+    if (p.length === 2) return p.pop().split(';').shift();
+  }
+
+  function fmtPrice(v) {
+    return parseFloat(v).toFixed(2).replace('.', ',') + 'с';
+  }
+
+  function setWarn(itemId, stock) {
+    var el = document.getElementById('cart-stock-warn-' + itemId);
+    if (!el) return;
+    if (stock !== null) {
+      var word = pluralRu(stock, 'товар', 'товара', 'товаров');
+      el.textContent = 'Доступно только ' + stock + ' ' + word + ' на складе.';
+      el.style.display = 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function updateButtons(itemId, qty, stock) {
+    var decBtn = document.querySelector('[data-item="' + itemId + '"][data-action="dec"]');
+    var incBtn = document.querySelector('[data-item="' + itemId + '"][data-action="inc"]');
+    if (decBtn) decBtn.disabled = qty <= 1;
+    if (incBtn) incBtn.disabled = qty >= stock;
+  }
+
+  function updateCartTotal(cartTotal) {
+    var el = document.getElementById('cartGrandTotal');
+    if (el) el.textContent = fmtPrice(cartTotal);
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.cart-qty__btn');
+    if (!btn) return;
+
+    var itemId = btn.dataset.item;
+    var action = btn.dataset.action;
+    var row    = document.getElementById('cart-item-' + itemId);
+    var stock  = parseInt(row ? row.dataset.stock : 0);
+    var qtyEl  = document.getElementById('cart-qty-' + itemId);
+    var qty    = parseInt(qtyEl ? qtyEl.textContent : 1);
+
+    // Client-side guard: block inc at stock limit without even hitting the server
+    if (action === 'inc' && qty >= stock) {
+      showStockMsg(stock);
+      setWarn(itemId, stock);
+      btn.disabled = true;
+      return;
+    }
+
+    fetch('/cart/update/' + itemId + '/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      body: new URLSearchParams({ action: action }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.status === 'stock_limit') {
+          showStockMsg(data.stock);
+          setWarn(itemId, data.stock);
+          updateButtons(itemId, data.quantity, data.stock);
+          return;
+        }
+        if (qtyEl) qtyEl.textContent = data.quantity;
+        var totalEl = document.getElementById('cart-total-' + itemId);
+        if (totalEl) totalEl.textContent = fmtPrice(data.item_total);
+        updateCartTotal(data.cart_total);
+        updateButtons(itemId, data.quantity, data.stock);
+
+        // Clear inline warning if we are now below stock
+        if (data.quantity < data.stock) setWarn(itemId, null);
+      });
+  });
+
+  // Initialise button states on page load
+  document.querySelectorAll('.cart-item').forEach(function (row) {
+    var itemId = row.dataset.itemId;
+    var stock  = parseInt(row.dataset.stock);
+    var qtyEl  = document.getElementById('cart-qty-' + itemId);
+    if (qtyEl) updateButtons(itemId, parseInt(qtyEl.textContent), stock);
+  });
+})();
+</script>
 {% endblock %}

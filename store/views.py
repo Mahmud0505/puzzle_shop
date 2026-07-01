@@ -62,14 +62,28 @@ def favourites(request):
 def favourite_update_qty(request, fav_id):
     fav = get_object_or_404(Favourite, pk=fav_id, user=request.user)
     action = request.POST.get('action')
+    stock = fav.product.stock
+
     if action == 'inc':
+        if fav.quantity >= stock:
+            return JsonResponse({
+                'status': 'stock_limit',
+                'quantity': fav.quantity,
+                'stock': stock,
+                'item_total': str(fav.get_total_price()),
+            })
         fav.quantity += 1
         fav.save()
     elif action == 'dec' and fav.quantity > 1:
         fav.quantity -= 1
         fav.save()
-    return JsonResponse({'status': 'ok', 'quantity': fav.quantity,
-                         'item_total': str(fav.get_total_price())})
+
+    return JsonResponse({
+        'status': 'ok',
+        'quantity': fav.quantity,
+        'stock': stock,
+        'item_total': str(fav.get_total_price()),
+    })
 
 
 @require_POST

@@ -364,6 +364,33 @@
 
 <script id="user-auth-data" type="application/json">{% if user.is_authenticated %}true{% else %}false{% endif %}</script>
 <script src="{% static 'js/main.js' %}?v=11"></script>
+
+<!-- ===== STOCK TOAST ===== -->
+<div id="stockToast" class="stock-toast" role="alert" aria-live="assertive">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+  <span id="stockToastMsg"></span>
+</div>
+<script>
+function pluralRu(n, one, few, many) {
+  var m10 = n % 10, m100 = n % 100;
+  if (m100 >= 11 && m100 <= 19) return many;
+  if (m10 === 1) return one;
+  if (m10 >= 2 && m10 <= 4) return few;
+  return many;
+}
+function showStockMsg(stock) {
+  var toast = document.getElementById('stockToast');
+  var msg   = document.getElementById('stockToastMsg');
+  if (!toast || !msg) return;
+  var word = pluralRu(stock, 'товар', 'товара', 'товаров');
+  msg.textContent = 'Доступно только ' + stock + ' ' + word + ' на складе.';
+  toast.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(function() { toast.classList.remove('show'); }, 3200);
+}
+</script>
 <script>
   // Footer delivery link
   document.getElementById('deliveryFooterBtn').addEventListener('click', e => {

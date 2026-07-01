@@ -29,7 +29,8 @@
         {% for item in items %}
         <div class="fav-item" id="fav-item-{{ item.pk }}"
              data-fav-id="{{ item.pk }}"
-             data-price="{{ item.product.price }}">
+             data-stock="{{ item.product.stock }}"
+             data-price="{{ item.product.effective_price }}">
           <div class="fav-item__img">
             {% if item.product.image %}
               <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
@@ -125,7 +126,9 @@
       <!-- Left: editable items -->
       <div class="co-modal__items" id="coItems">
         {% for item in items %}
-        <div class="co-item" id="co-item-{{ item.pk }}" data-price="{{ item.product.price }}">
+        <div class="co-item" id="co-item-{{ item.pk }}"
+             data-price="{{ item.product.effective_price }}"
+             data-stock="{{ item.product.stock }}">
           <div class="co-item__img">
             {% if item.product.image %}
               <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
@@ -257,9 +260,9 @@
 
   var DELIVERY_COST = {{ delivery_cost }};
   var DELIVERY_THRESHOLD = {{ delivery_threshold }};
-  function fmtPrice(v) { return v.toFixed(2).replace('.', ',') + 'с'; }
+  function fmtPrice(v) { return parseFloat(v).toFixed(2).replace('.', ',') + 'с'; }
 
-  /* ---- shared recalc: updates both main page and modal summaries ---- */
+  /* ---- shared recalc ---- */
   function recalcAll() {
     var items = document.querySelectorAll('.fav-item');
     var count = 0, subtotal = 0;
@@ -272,14 +275,10 @@
     });
     var delivery = count >= DELIVERY_THRESHOLD ? 0 : DELIVERY_COST;
     var grand = subtotal + delivery;
-
-    // main summary
     setEl('sumCount', count);
     setEl('sumSubtotal', fmtPrice(subtotal));
     setEl('sumTotal', fmtPrice(grand));
     setDelivery('sumDelivery', delivery);
-
-    // checkout modal summary
     setEl('coCount', count);
     setEl('coSubtotal', fmtPrice(subtotal));
     setEl('coTotal', fmtPrice(grand));
@@ -303,38 +302,64 @@
     }
   }
 
-  function updateDecBtns(favId, qty) {
+  function getStock(favId) {
+    var row = document.getElementById('fav-item-' + favId) ||
+              document.getElementById('co-item-' + favId);
+    return row ? parseInt(row.dataset.stock) || 0 : 0;
+  }
+
+  function updateQtyBtns(favId, qty, stock) {
     document.querySelectorAll('[data-fav="' + favId + '"][data-action="dec"]').forEach(function(b) {
       b.disabled = qty <= 1;
     });
+    document.querySelectorAll('[data-fav="' + favId + '"][data-action="inc"]').forEach(function(b) {
+      b.disabled = stock > 0 && qty >= stock;
+    });
   }
 
-  /* ---- init dec buttons ---- */
+  /* ---- init buttons on load ---- */
   document.querySelectorAll('.fav-qty-val').forEach(function(el) {
-    updateDecBtns(el.id.replace('qty-', ''), parseInt(el.textContent));
+    var favId = el.id.replace('qty-', '');
+    updateQtyBtns(favId, parseInt(el.textContent), getStock(favId));
   });
 
-  /* ---- qty buttons (both main page and modal) ---- */
+  /* ---- qty buttons (main page + checkout modal) ---- */
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.fav-qty-btn, .co-qty-btn');
     if (!btn) return;
     var favId = btn.dataset.fav;
     var action = btn.dataset.action;
+    var stock = getStock(favId);
+    var qtyEl = document.getElementById('qty-' + favId);
+    var qty = parseInt(qtyEl ? qtyEl.textContent : 1);
+
+    /* client-side guard */
+    if (action === 'inc' && stock > 0 && qty >= stock) {
+      showStockMsg(stock);
+      document.querySelectorAll('[data-fav="' + favId + '"][data-action="inc"]').forEach(function(b) {
+        b.disabled = true;
+      });
+      return;
+    }
+
     post('/favourites/' + favId + '/qty/', { action: action })
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        // update all qty displays for this fav
+        if (data.status === 'stock_limit') {
+          showStockMsg(data.stock);
+          updateQtyBtns(favId, data.quantity, data.stock);
+          return;
+        }
         document.querySelectorAll('#qty-' + favId + ', #co-qty-' + favId).forEach(function(el) {
           el.textContent = data.quantity;
         });
-        // update per-item total in modal
         var coItem = document.getElementById('co-item-' + favId);
         if (coItem) {
           var price = parseFloat(coItem.dataset.price);
           var priceEl = document.getElementById('co-price-' + favId);
           if (priceEl) priceEl.textContent = fmtPrice(price * data.quantity);
         }
-        updateDecBtns(favId, data.quantity);
+        updateQtyBtns(favId, data.quantity, data.stock);
         recalcAll();
       });
   });
