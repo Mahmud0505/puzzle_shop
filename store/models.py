@@ -1,7 +1,9 @@
+from decimal import Decimal, ROUND_HALF_UP
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 
@@ -43,6 +45,12 @@ class Product(models.Model):
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.PositiveSmallIntegerField(
+        'Скидка (%)',
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text='0 = без скидки. Введите значение от 0 до 100.',
+    )
     image = models.ImageField(upload_to='products/', blank=True, validators=[validate_image_size])
     size = models.CharField('Размер', max_length=100, blank=True)
     material = models.CharField('Материал', max_length=100, blank=True)
@@ -68,6 +76,17 @@ class Product(models.Model):
 
     def get_absolute_url(self):
         return reverse('store:product_detail', kwargs={'slug': self.slug})
+
+    @property
+    def discounted_price(self):
+        if self.discount:
+            factor = Decimal(str(100 - self.discount)) / Decimal('100')
+            return (self.price * factor).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return None
+
+    @property
+    def effective_price(self):
+        return self.discounted_price if self.discount else self.price
 
 
 class ProductImage(models.Model):
@@ -96,7 +115,7 @@ class Favourite(models.Model):
         verbose_name_plural = 'Избранное'
 
     def get_total_price(self):
-        return self.product.price * self.quantity
+        return self.product.effective_price * self.quantity
 
     def __str__(self):
         return f'{self.user.username} — {self.product.name}'

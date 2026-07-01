@@ -25,4 +25,4 @@ class CartItem(models.Model):
         verbose_name_plural = 'Позиции корзины'
 
     def get_total_price(self):
-        return self.product.price * self.quantity
+        return self.product.effective_price * self.quantity

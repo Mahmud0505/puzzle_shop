@@ -98,7 +98,7 @@ def quick_checkout(request):
             return JsonResponse({'error': 'not_enough_stock', 'available': product.stock}, status=400)
 
         profile = request.user.profile
-        subtotal = product.price * quantity
+        subtotal = product.effective_price * quantity
         delivery = Decimal('0') if quantity >= DELIVERY_THRESHOLD else Decimal(str(DELIVERY_COST))
         total = subtotal + delivery
 
@@ -116,7 +116,7 @@ def quick_checkout(request):
         OrderItem.objects.create(
             order=order,
             product=product,
-            price=product.price,
+            price=product.effective_price,
             quantity=quantity,
         )
         product.stock -= quantity
@@ -175,7 +175,7 @@ def favourites_checkout(request):
             OrderItem.objects.create(
                 order=order,
                 product=product,
-                price=product.price,
+                price=product.effective_price,
                 quantity=item.quantity,
             )
             product.stock -= item.quantity

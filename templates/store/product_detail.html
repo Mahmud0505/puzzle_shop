@@ -65,7 +65,15 @@
 
         <!-- Price row -->
         <div class="pd-price-row">
-          <span class="pd-price">{{ product.price|somoni }}</span>
+          {% if product.discount %}
+            <div class="pd-price-wrap">
+              <span class="pd-price pd-price--new">{{ product.effective_price|somoni }}</span>
+              <span class="pd-price pd-price--old">{{ product.price|somoni }}</span>
+              <span class="pd-discount-badge">-{{ product.discount }}%</span>
+            </div>
+          {% else %}
+            <span class="pd-price">{{ product.price|somoni }}</span>
+          {% endif %}
           {% if product.availability_status == 'in_stock' %}
             <span class="pd-stock pd-stock--in">
               <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -126,7 +134,7 @@
               <button class="pd-buy-btn js-quick-buy btn btn-primary btn-pill"
                       data-id="{{ product.pk }}"
                       data-name="{{ product.name }}"
-                      data-price="{{ product.price }}"
+                      data-price="{{ product.effective_price }}"
                       data-image="{% if product.image %}{{ product.image.url }}{% endif %}">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/>

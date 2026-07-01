@@ -9,6 +9,12 @@ local_settings.py
 db.sqlite3
 media/
 
+# PostgreSQL
+*.sql
+*.dump
+*.backup
+*.pg_dump
+
 # Environment
 .env
 venv/
@@ -20,3 +26,31 @@ staticfiles/
 # IDE
 .vscode/
 .idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python packaging / tools
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-log.txt
+
+# Testing & coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp

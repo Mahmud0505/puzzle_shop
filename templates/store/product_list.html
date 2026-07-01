@@ -17,8 +17,17 @@
   </div>
   <div class="hero__image-wrap">
     <div class="hero__image-accent"></div>
-    <div class="hero__image">
-      <img src="{% static 'images/333.jpg' %}" alt="Пазлы Puzzle House">
+    <div class="hero__image hero__slider">
+      <img class="hero__slide active" src="{% static 'images/333.jpg' %}" alt="Пазлы Puzzle House">
+      <img class="hero__slide" src="{% static 'images/2.jpg' %}" alt="Пазлы Puzzle House">
+      <img class="hero__slide" src="{% static 'images/3.jpg' %}" alt="Пазлы Puzzle House">
+      <img class="hero__slide" src="{% static 'images/4.jpg' %}" alt="Пазлы Puzzle House">
+      <img class="hero__slide" src="{% static 'images/5.jpg' %}" alt="Пазлы Puzzle House">
+      <img class="hero__slide" src="{% static 'images/6.jpg' %}" alt="Пазлы Puzzle House">
+
+
+      <!-- Add more images here: <img class="hero__slide" src="{% static 'images/YOUR_IMAGE.jpg' %}" alt="..."> -->
+      <div class="hero__slider-dots"></div>
     </div>
   </div>
 </section>
@@ -120,7 +129,7 @@
                   <button class="product-card__btn js-quick-buy"
                           data-id="{{ product.pk }}"
                           data-name="{{ product.name }}"
-                          data-price="{{ product.price }}"
+                          data-price="{{ product.effective_price }}"
                           data-image="{% if product.image %}{{ product.image.url }}{% endif %}">Купить</button>
                   {% else %}
                   <a href="{{ product.get_absolute_url }}" class="product-card__btn">Купить</a>
@@ -138,7 +147,15 @@
                   </svg>
                 </button>
               </div>
+              {% if product.discount %}
+              <div class="product-card__price-wrap">
+                <span class="product-card__price product-card__price--new">{{ product.effective_price|somoni }}</span>
+                <span class="product-card__price product-card__price--old">{{ product.price|somoni }}</span>
+                <span class="discount-badge">-{{ product.discount }}%</span>
+              </div>
+              {% else %}
               <span class="product-card__price">{{ product.price|somoni }}</span>
+              {% endif %}
             </div>
           </div>
         {% endfor %}
@@ -319,6 +336,35 @@
 {% endblock content %}
 
 {% block extra_js %}
+<script>
+(function() {
+  var slider = document.querySelector('.hero__slider');
+  if (!slider) return;
+  var slides = slider.querySelectorAll('.hero__slide');
+  var dotsContainer = slider.querySelector('.hero__slider-dots');
+  if (slides.length < 2) return;
+
+  var current = 0;
+
+  // Build dots
+  slides.forEach(function(_, i) {
+    var dot = document.createElement('button');
+    dot.className = 'hero__slider-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', function() { goTo(i); });
+    dotsContainer.appendChild(dot);
+  });
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    dotsContainer.children[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    dotsContainer.children[current].classList.add('active');
+  }
+
+  setInterval(function() { goTo(current + 1); }, 3000);
+})();
+</script>
 {% if user.is_authenticated %}
 {{ delivery_cost|json_script:"delivery-cost" }}
 {{ delivery_threshold|json_script:"delivery-threshold" }}

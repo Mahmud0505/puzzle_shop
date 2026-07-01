@@ -1,4 +1,6 @@
-﻿// Modal helpers
+﻿window._userAuthenticated = JSON.parse(document.getElementById('user-auth-data').textContent);
+
+// Modal helpers
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   document.body.style.overflow = 'hidden';
