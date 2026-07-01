@@ -1,0 +1,33 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:store_product_global_discount' %}"
+       class="viewsitelink"
+       style="
+         background: linear-gradient(135deg, #ef4444, #dc2626);
+         color: #fff;
+         padding: 8px 16px;
+         border-radius: 6px;
+         font-weight: 700;
+         font-size: 13px;
+         text-decoration: none;
+         display: inline-flex;
+         align-items: center;
+         gap: 6px;
+         box-shadow: 0 2px 6px rgba(220,38,38,.35);
+         transition: opacity .15s;
+       "
+       onmouseover="this.style.opacity='.85'"
+       onmouseout="this.style.opacity='1'">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+           viewBox="0 0 24 24" style="flex-shrink:0">
+        <circle cx="9" cy="9" r="3"/><circle cx="15" cy="15" r="3"/>
+        <line x1="3" y1="21" x2="21" y2="3"/>
+      </svg>
+      Глобальная скидка
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}
